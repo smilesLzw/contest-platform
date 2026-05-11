@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(pip3 install *)",
+      "Bash(python3 -m alembic init alembic)",
+      "Bash(python3 -m py_compile /Users/smiles/lzw/claude_project/backend/app/core/deps.py)",
+      "Bash(python3 -m py_compile /Users/smiles/lzw/claude_project/backend/app/core/security.py)",
+      "Bash(python3 -m py_compile /Users/smiles/lzw/claude_project/backend/app/database.py)",
+      "Bash(python3 -m py_compile app/database.py)",
+      "Bash(python3 -m py_compile app/main.py)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(alembic upgrade *)",
+      "Bash(mysql *)",
+      "Bash(alembic revision *)",
+      "Bash(python3 *)",
+      "Bash(uvicorn app.main:app --reload --port 8000)",
+      "Bash(curl -s http://localhost:8000/api/v1/stats)",
+      "Bash(curl *)",
+      "Bash(kill -9 47642 47678 47209 47232)",
+      "Bash(kill %1)",
+      "Bash(kill -9 49106 49112)",
+      "Bash(kill -9 51064 51082)",
+      "Bash(uvicorn app.main:app --port 8000 --log-level debug)",
+      "Bash(npm --prefix /Users/smiles/lzw/claude_project/frontend run build)",
+      "Bash(kill -9 60935 60941 60940)",
+      "Bash(ps -p 35193 -o lstart=)",
+      "WebSearch",
+      "Bash(npx vite *)",
+      "WebFetch(domain:github.com)",
+      "Bash(grep -o '.\\\\{0,200\\\\}scrollElement.\\\\{0,200\\\\}' /Users/smiles/lzw/claude_project/frontend/node_modules/md-editor-v3/lib/es/chunks/index3.mjs)",
+      "Bash(python -c \"from alembic.config import Config; from alembic import command; import os; print\\(os.getcwd\\(\\)\\)\")"
+    ]
+  }
+}

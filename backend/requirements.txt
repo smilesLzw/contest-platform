@@ -1,0 +1,12 @@
+fastapi>=0.110.0
+uvicorn[standard]
+sqlalchemy[asyncio]>=2.0
+asyncmy
+aiomysql
+alembic
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+pydantic[email]
+python-dotenv
+aiofiles

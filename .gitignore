@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.eggs/
+venv/
+
+# Node / Frontend
+node_modules/
+dist/
+
+# Uploaded files
+uploads/files/*
+uploads/images/*
+!uploads/files/.gitkeep
+!uploads/images/.gitkeep
+
+# Environment
+.env
+.env.local
+.env.*.local

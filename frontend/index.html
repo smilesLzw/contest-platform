@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>院赛作品展示与AI工具导航平台</title>
+    <script>
+      (function() {
+        var saved = localStorage.getItem('app-theme');
+        var theme = saved || (function() {
+          var h = new Date().getHours();
+          return (h >= 6 && h < 19) ? 'light' : 'dark';
+        })();
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
+    <style>
+      /* 关键样式：在 Vue/CSS 变量加载之前就消除白闪 */
+      html { background: #ffffff; }
+      body { background: #ffffff; margin: 0; }
+      [data-theme="dark"] { background: #1d1d1f; }
+      [data-theme="dark"] body { background: #1d1d1f; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

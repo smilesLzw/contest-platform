@@ -1,0 +1,113 @@
+<template>
+  <div class="dashboard">
+    <!-- Stat cards -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-num" style="color: var(--accent)">{{ stats.works_count ?? '-' }}</span>
+        <span class="stat-label">作品总数</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" style="color: var(--green)">{{ stats.news_count ?? '-' }}</span>
+        <span class="stat-label">新闻总数</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" style="color: var(--amber)">{{ stats.tools_count ?? '-' }}</span>
+        <span class="stat-label">AI 工具数</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num" style="color: var(--red)">{{ usersCount ?? '-' }}</span>
+        <span class="stat-label">教师账号数</span>
+      </div>
+    </div>
+
+    <!-- Recent logs -->
+    <div class="section">
+      <h3 class="section-title">最近操作日志</h3>
+      <el-table :data="recentLogs" v-loading="logLoading && !isInitial" class="log-table">
+        <el-table-column label="用户ID" prop="user_id" width="70" />
+        <el-table-column label="操作" prop="action" width="140" />
+        <el-table-column label="对象类型" prop="target_type" width="90" />
+        <el-table-column label="详情" prop="detail" min-width="200" show-overflow-tooltip />
+        <el-table-column label="时间" width="170">
+          <template #default="{ row }">{{ row.created_at }}</template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!recentLogs.length && !logLoading" description="暂无日志" />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { getStats, getLogs } from '../../api/common'
+import { getUsers } from '../../api/users'
+
+const stats = ref({})
+const usersCount = ref(0)
+const recentLogs = ref([])
+const logLoading = ref(false)
+const isInitial = ref(true)
+
+onMounted(async () => {
+  try {
+    const [statsRes, usersRes] = await Promise.all([
+      getStats().catch(() => ({ data: {} })),
+      getUsers({ page: 1, page_size: 1 }).catch(() => ({ data: { total: 0 } })),
+    ])
+    stats.value = statsRes.data || {}
+    usersCount.value = usersRes.data?.total || 0
+
+    logLoading.value = true
+    const logRes = await getLogs({ page: 1, page_size: 10 })
+    recentLogs.value = logRes.data?.items || []
+  } catch (e) {
+    console.error(e)
+  } finally {
+    logLoading.value = false
+    isInitial.value = false
+  }
+})
+</script>
+
+<style scoped>
+/* Stat cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: 0 2px 12px var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-num {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Log section */
+.section { margin-top: 8px; }
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  letter-spacing: -0.02em;
+}
+.log-table {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+</style>
