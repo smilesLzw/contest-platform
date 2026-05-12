@@ -37,7 +37,7 @@
       </el-table-column>
       <el-table-column prop="title" label="作品名" min-width="180" show-overflow-tooltip />
       <el-table-column prop="major_name" label="专业" width="100" />
-      <el-table-column label="学年学期" width="110">
+      <el-table-column label="学年学期" width="140">
         <template #default="{ row }">{{ row.academic_year }} {{ row.semester === 1 ? '上' : '下' }}</template>
       </el-table-column>
       <el-table-column label="状态" width="80">

@@ -47,7 +47,7 @@
         <el-table-column label="评分" width="70">
           <template #default="{ row }">★ {{ row.rating }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="140">
+        <el-table-column label="操作" width="140" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openToolDialog(row)">编辑</el-button>
             <el-button link size="small" @click="handleDeleteTool(row)" style="color:var(--red)">删除</el-button>

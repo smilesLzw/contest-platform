@@ -10,7 +10,7 @@
       <el-table-column label="分类" width="100">
         <template #default="{ row }">{{ categoryLabel(row.category) }}</template>
       </el-table-column>
-      <el-table-column label="状态" width="70">
+      <el-table-column label="状态" width="80">
         <template #default="{ row }">
           <span :class="['status-tag', row.status]">
             {{ row.status === 'published' ? '已发布' : '草稿' }}
@@ -23,10 +23,10 @@
         </template>
       </el-table-column>
       <el-table-column prop="author_name" label="作者" width="80" />
-      <el-table-column label="创建时间" width="100">
+      <el-table-column label="创建时间" width="130">
         <template #default="{ row }">{{ row.created_at?.slice(0, 10) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
           <el-button link type="primary" size="small" @click="$router.push(`/admin/news/${row.id}/edit`)">编辑</el-button>
           <el-button v-if="row.status !== 'published'" link type="primary" size="small" @click="handlePublish(row.id)">发布</el-button>

@@ -16,7 +16,7 @@
           </span>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" width="100">
+      <el-table-column label="创建时间" width="130">
         <template #default="{ row }">{{ row.created_at?.slice(0, 10) }}</template>
       </el-table-column>
       <el-table-column label="操作" width="220" fixed="right">

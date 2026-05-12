@@ -77,6 +77,12 @@ onMounted(async () => {
   gap: 16px;
   margin-bottom: 36px;
 }
+@media (max-width: 900px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr; }
+}
 .stat-card {
   background: var(--bg-card);
   border-radius: var(--radius-md);
