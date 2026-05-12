@@ -44,7 +44,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { DataAnalysis, Collection, Reading, Tools, User, Document, Headset } from '@element-plus/icons-vue'
+import { DataAnalysis, Collection, Reading, Tools, User, Document, Headset, School, Trophy } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -58,6 +58,8 @@ const navItems = [
   { path: '/admin/users', label: '用户管理', icon: User },
   { path: '/admin/bg-music', label: '背景音乐', icon: Headset },
   { path: '/admin/logs', label: '操作日志', icon: Document },
+  { path: '/admin/majors', label: '专业管理', icon: School },
+  { path: '/admin/competitions', label: '赛事管理', icon: Trophy },
 ]
 
 function isActive(path) {
@@ -73,6 +75,8 @@ const routeTitles = {
   '/admin/users': '用户管理',
   '/admin/bg-music': '背景音乐',
   '/admin/logs': '操作日志',
+  '/admin/majors': '专业管理',
+  '/admin/competitions': '赛事管理',
 }
 const currentTitle = computed(() => routeTitles[route.path] || '管理后台')
 

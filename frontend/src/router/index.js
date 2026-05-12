@@ -44,6 +44,8 @@ const routes = [
       { path: 'users', name: 'AdminUsers', component: () => import('../views/admin/AdminUsersView.vue') },
       { path: 'bg-music', name: 'AdminBgMusic', component: () => import('../views/admin/AdminBgMusic.vue') },
       { path: 'logs', name: 'AdminLogs', component: () => import('../views/admin/AdminLogsView.vue') },
+      { path: 'majors', name: 'AdminMajors', component: () => import('../views/admin/AdminMajorsView.vue') },
+      { path: 'competitions', name: 'AdminCompetitions', component: () => import('../views/admin/AdminCompetitionsView.vue') },
     ],
   },
 ]

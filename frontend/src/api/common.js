@@ -59,3 +59,42 @@ export function deleteBgMusic(id) {
 export function toggleBgMusic(id) {
   return request.put(`/bg-music/${id}/toggle`)
 }
+
+// 专业管理（管理员）
+export function getAdminMajors() {
+  return request.get('/admin/majors')
+}
+export function createMajor(data) {
+  return request.post('/admin/majors', data)
+}
+export function updateMajor(id, data) {
+  return request.put(`/admin/majors/${id}`, data)
+}
+export function deleteMajor(id) {
+  return request.delete(`/admin/majors/${id}`)
+}
+
+// 赛事管理
+export function getCompetitions() {
+  return request.get('/competitions')
+}
+export function getAdminCompetitions() {
+  return request.get('/admin/competitions')
+}
+export function createCompetition(data) {
+  return request.post('/admin/competitions', data)
+}
+export function updateCompetition(id, data) {
+  return request.put(`/admin/competitions/${id}`, data)
+}
+export function deleteCompetition(id) {
+  return request.delete(`/admin/competitions/${id}`)
+}
+export function toggleCompetition(id) {
+  return request.put(`/admin/competitions/${id}/toggle`)
+}
+
+// 教师下拉列表
+export function getTeachers() {
+  return request.get('/users/teachers')
+}

@@ -15,6 +15,7 @@ class Work(Base):
     title: Mapped[str] = mapped_column(String(100), nullable=False, comment="作品名称")
     author_names: Mapped[str] = mapped_column(String(200), nullable=False, comment="参赛学生姓名，逗号分隔")
     guide_teacher: Mapped[str] = mapped_column(String(100), nullable=True, comment="指导教师")
+    class_name: Mapped[str] = mapped_column(String(20), nullable=True, comment="班级，如一班")
     major_id: Mapped[int] = mapped_column(Integer, ForeignKey("majors.id"), nullable=True, comment="专业ID")
     academic_year: Mapped[str] = mapped_column(String(20), nullable=False, comment="学年，如2024-2025")
     semester: Mapped[int] = mapped_column(SmallInteger, nullable=False, comment="1上学期 2下学期")

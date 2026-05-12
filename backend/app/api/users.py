@@ -15,6 +15,16 @@ from app.crud.log import create_log
 router = APIRouter(prefix="/users", tags=["用户管理"])
 
 
+@router.get("/teachers")
+async def list_teachers(db: AsyncSession = Depends(get_db)):
+    """教师下拉列表（公开）"""
+    result = await db.execute(
+        select(User.id, User.name).where(User.role.in_(["teacher", "admin"]), User.status == 1).order_by(User.name)
+    )
+    rows = result.all()
+    return ApiResponse(data=[{"id": r[0], "name": r[1]} for r in rows])
+
+
 @router.get("/", response_model=ApiResponse[PageData[UserResponse]])
 async def list_users(
     page: int = Query(1, ge=1),

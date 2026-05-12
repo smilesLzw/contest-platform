@@ -6,8 +6,9 @@ from app.models.ai_category import AiCategory
 from app.models.ai_tool import AiTool
 from app.models.operation_log import OperationLog
 from app.models.bg_music import BackgroundMusic
+from app.models.competition import Competition
 
 __all__ = [
     "User", "Major", "Work", "News",
-    "AiCategory", "AiTool", "OperationLog", "BackgroundMusic",
+    "AiCategory", "AiTool", "OperationLog", "BackgroundMusic", "Competition",
 ]

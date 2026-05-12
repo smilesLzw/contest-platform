@@ -7,6 +7,7 @@ class WorkCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=100)
     author_names: str = Field(..., min_length=1, max_length=200)
     guide_teacher: str | None = None
+    class_name: str | None = None
     major_id: int | None = None
     academic_year: str = Field(..., min_length=1)
     semester: int = Field(..., ge=1, le=2)
@@ -33,6 +34,7 @@ class WorkResponse(BaseModel):
     title: str
     author_names: str
     guide_teacher: str | None = None
+    class_name: str | None = None
     major_id: int | None = None
     major_name: str | None = None
     academic_year: str

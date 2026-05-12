@@ -25,27 +25,36 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="指导教师" prop="guide_teacher">
-              <el-input v-model="form.guide_teacher" />
+              <el-select v-model="form.guide_teacher" placeholder="请选择教师" style="width: 100%" clearable filterable>
+                <el-option v-for="t in teachers" :key="t.id" :label="t.name" :value="t.name" />
+              </el-select>
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-row :gutter="20">
-          <el-col :span="8">
+          <el-col :span="6">
             <el-form-item label="专业" prop="major_id">
               <el-select v-model="form.major_id" placeholder="请选择专业" style="width: 100%">
                 <el-option v-for="m in majors" :key="m.id" :label="m.name" :value="m.id" />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="6">
+            <el-form-item label="班级" prop="class_name">
+              <el-select v-model="form.class_name" placeholder="请选择班级" style="width: 100%" clearable>
+                <el-option v-for="c in classOptions" :key="c" :label="c" :value="c" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="6">
             <el-form-item label="学年" prop="academic_year">
               <el-select v-model="form.academic_year" placeholder="请选择" style="width: 100%">
                 <el-option v-for="y in academicYears" :key="y" :label="y" :value="y" />
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="6">
             <el-form-item label="学期" prop="semester">
               <el-radio-group v-model="form.semester">
                 <el-radio :value="1">上学期</el-radio>
@@ -58,18 +67,20 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="赛事名称" prop="contest_name">
-              <el-input v-model="form.contest_name" />
+              <el-select v-model="form.contest_name" placeholder="请选择赛事" style="width: 100%" clearable filterable>
+                <el-option v-for="c in competitions" :key="c.id" :label="`${c.name}（${c.academic_year} ${c.semester === 1 ? '上' : '下'}）`" :value="c.name" />
+              </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="获奖情况" prop="award">
               <el-select v-model="form.award" placeholder="请选择" style="width: 100%" clearable>
+                <el-option label="暂无" value="暂无" />
                 <el-option label="一等奖" value="一等奖" />
                 <el-option label="二等奖" value="二等奖" />
                 <el-option label="三等奖" value="三等奖" />
                 <el-option label="优秀奖" value="优秀奖" />
                 <el-option label="参与奖" value="参与奖" />
-                <el-option label="无" value="无" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -177,7 +188,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { getMajors, uploadImage, uploadFile, uploadAudio, uploadVideo } from '../../api/common'
+import { getMajors, uploadImage, uploadFile, uploadAudio, uploadVideo, getTeachers, getCompetitions } from '../../api/common'
 import { getWork, createWork, updateWork } from '../../api/works'
 import { useAuthStore } from '../../stores/auth'
 import { ElMessage } from 'element-plus'
@@ -198,12 +209,15 @@ const formRef = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
 const majors = ref([])
+const teachers = ref([])
+const competitions = ref([])
 
 const form = reactive({
   title: '',
   author_names: '',
   guide_teacher: '',
   major_id: null,
+  class_name: '',
   academic_year: '',
   semester: 1,
   contest_name: '',
@@ -230,6 +244,8 @@ const rules = {
   academic_year: [{ required: true, message: '请选择学年', trigger: 'change' }],
   content: [{ required: true, message: '请输入作品简介', trigger: 'blur' }],
 }
+
+const classOptions = ['一班', '二班', '三班', '四班', '五班', '六班', '七班']
 
 const academicYears = []
 const year = new Date().getFullYear()
@@ -310,8 +326,15 @@ onMounted(async () => {
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
 
   try {
-    const majorsRes = await getMajors()
+    const [majorsRes, teachersRes, competitionsRes] = await Promise.all([
+      getMajors(),
+      getTeachers().catch(() => ({ data: [] })),
+      getCompetitions().catch(() => ({ data: [] })),
+    ])
     majors.value = majorsRes.data || []
+    teachers.value = teachersRes.data || []
+    competitions.value = competitionsRes.data || []
+
     if (isEdit) {
       loading.value = true
       const res = await getWork(route.params.id)
@@ -321,6 +344,7 @@ onMounted(async () => {
         author_names: w.author_names,
         guide_teacher: w.guide_teacher || '',
         major_id: w.major_id,
+        class_name: w.class_name || '',
         academic_year: w.academic_year,
         semester: w.semester,
         contest_name: w.contest_name || '',
