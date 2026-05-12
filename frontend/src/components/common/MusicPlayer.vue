@@ -128,6 +128,19 @@ function setVolume(e) {
 
 let interactionUnlock = null
 
+function registerInteractionUnlock() {
+  if (interactionUnlock) return
+  interactionUnlock = () => {
+    const a = audioEl.value
+    if (a && a.paused && tracks.value.length) {
+      a.play().then(() => { playing.value = true }).catch(() => {})
+    }
+    document.removeEventListener('click', interactionUnlock)
+    interactionUnlock = null
+  }
+  document.addEventListener('click', interactionUnlock)
+}
+
 function tryAutoplay() {
   const a = audioEl.value
   if (!a) return
@@ -140,23 +153,18 @@ function tryAutoplay() {
     }
   }).catch(() => {
     playing.value = false
-    // 浏览器阻止自动播放，等用户首次点击页面后再播
-    if (!interactionUnlock) {
-      interactionUnlock = () => {
-        a.play().then(() => { playing.value = true }).catch(() => {})
-        document.removeEventListener('click', interactionUnlock)
-        interactionUnlock = null
-      }
-      document.addEventListener('click', interactionUnlock)
-    }
+    registerInteractionUnlock()
   })
 }
 
-onMounted(async () => {
-  await loadTracks()
-  if (tracks.value.length && audioEl.value) {
-    tryAutoplay()
-  }
+onMounted(() => {
+  // 先注册交互监听，避免 API 加载期间错过用户点击
+  registerInteractionUnlock()
+  loadTracks().then(() => {
+    if (tracks.value.length && audioEl.value) {
+      tryAutoplay()
+    }
+  })
 })
 
 onBeforeUnmount(() => {
