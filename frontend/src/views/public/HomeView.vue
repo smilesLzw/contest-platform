@@ -168,7 +168,7 @@ onBeforeUnmount(() => {
   position: relative;
   text-align: center;
   padding: 120px 20px 120px;
-  background: var(--bg-secondary);
+  background: var(--bg-secondary) url('../../assets/images/hero-banner.png') center/cover no-repeat;
   margin-bottom: 0;
 }
 .hero-title {

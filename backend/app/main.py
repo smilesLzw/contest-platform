@@ -10,7 +10,7 @@ from app.database import get_db, engine, Base
 from app.models import User, Work, News, AiTool, OperationLog, Major, AiCategory
 from app.core.deps import get_current_user, require_admin
 from app.schemas.common import ApiResponse, PageData
-from app.api import auth, works, news, ai_tools, users, upload
+from app.api import auth, works, news, ai_tools, users, upload, bg_music
 
 app = FastAPI(
     title="院赛作品展示与AI工具导航平台",
@@ -35,12 +35,15 @@ app.include_router(news.router, prefix="/api/v1")
 app.include_router(ai_tools.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(upload.router, prefix="/api/v1")
+app.include_router(bg_music.router, prefix="/api/v1")
 
 
 # 静态文件服务（必须在路由之前 mount）
 import os
 os.makedirs("uploads/images", exist_ok=True)
 os.makedirs("uploads/files", exist_ok=True)
+os.makedirs("uploads/audio", exist_ok=True)
+os.makedirs("uploads/videos", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 

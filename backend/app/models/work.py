@@ -20,10 +20,15 @@ class Work(Base):
     semester: Mapped[int] = mapped_column(SmallInteger, nullable=False, comment="1上学期 2下学期")
     contest_name: Mapped[str] = mapped_column(String(200), nullable=True, comment="赛事名称")
     award: Mapped[str] = mapped_column(String(50), nullable=True, comment="获奖情况")
-    cover_url: Mapped[str] = mapped_column(String(500), nullable=True, comment="封面图")
+    work_type: Mapped[str] = mapped_column(String(20), nullable=True, comment="作品类型: music/graphic/video/website")
+    cover_url: Mapped[str] = mapped_column(String(2048), nullable=True, comment="封面图")
     content: Mapped[str] = mapped_column(Text, nullable=True, comment="Markdown内容")
-    demo_url: Mapped[str] = mapped_column(String(500), nullable=True, comment="演示链接")
-    attachment_url: Mapped[str] = mapped_column(String(500), nullable=True, comment="附件链接")
+    demo_url: Mapped[str] = mapped_column(String(2048), nullable=True, comment="演示链接")
+    attachment_url: Mapped[str] = mapped_column(String(2048), nullable=True, comment="附件链接")
+    audio_url: Mapped[str] = mapped_column(String(2048), nullable=True, comment="音频URL")
+    video_url: Mapped[str] = mapped_column(String(2048), nullable=True, comment="视频URL")
+    embed_url: Mapped[str] = mapped_column(String(2048), nullable=True, comment="嵌入链接")
+    gallery_urls: Mapped[str] = mapped_column(Text, nullable=True, comment="图库JSON数组")
     status: Mapped[str] = mapped_column(
         Enum("draft", "published", "archived"), default="draft", comment="状态"
     )

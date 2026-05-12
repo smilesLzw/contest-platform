@@ -12,10 +12,15 @@ class WorkCreate(BaseModel):
     semester: int = Field(..., ge=1, le=2)
     contest_name: str | None = None
     award: str | None = None
+    work_type: str | None = None
     cover_url: str | None = None
     content: str | None = None
     demo_url: str | None = None
     attachment_url: str | None = None
+    audio_url: str | None = None
+    video_url: str | None = None
+    embed_url: str | None = None
+    gallery_urls: str | None = None
     status: str = "draft"
 
 
@@ -34,10 +39,15 @@ class WorkResponse(BaseModel):
     semester: int
     contest_name: str | None = None
     award: str | None = None
+    work_type: str | None = None
     cover_url: str | None = None
     content: str | None = None
     demo_url: str | None = None
     attachment_url: str | None = None
+    audio_url: str | None = None
+    video_url: str | None = None
+    embed_url: str | None = None
+    gallery_urls: str | None = None
     status: str
     publisher_id: int | None = None
     publisher_name: str | None = None
@@ -55,6 +65,7 @@ class WorkListParams(BaseModel):
     academic_year: str | None = None
     semester: int | None = None
     major_id: int | None = None
+    work_type: str | None = None
     keyword: str | None = None
     sort: str = "created_at_desc"
     status: str | None = None

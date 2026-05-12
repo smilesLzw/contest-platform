@@ -3,9 +3,10 @@
     <div class="cover">
       <el-image :src="work.cover_url || ''" fit="cover" style="width:100%;height:100%">
         <template #error>
-          <div class="cover-fallback">◆</div>
+          <div class="cover-fallback">{{ typeIcon }}</div>
         </template>
       </el-image>
+      <span class="type-badge" v-if="work.work_type">{{ typeLabel }}</span>
     </div>
     <div class="info">
       <div class="tags">
@@ -20,7 +21,19 @@
 </template>
 
 <script setup>
-defineProps({ work: { type: Object, required: true } })
+import { computed } from 'vue'
+
+const props = defineProps({ work: { type: Object, required: true } })
+
+const typeMap = {
+  music: { label: '音乐', icon: '♪' },
+  graphic: { label: '制图', icon: '◆' },
+  video: { label: '视频', icon: '▶' },
+  website: { label: '网站', icon: '◇' },
+}
+
+const typeLabel = computed(() => typeMap[props.work.work_type]?.label || '')
+const typeIcon = computed(() => typeMap[props.work.work_type]?.icon || '◆')
 </script>
 
 <style scoped>
@@ -40,6 +53,19 @@ defineProps({ work: { type: Object, required: true } })
   height: 180px;
   overflow: hidden;
   background: var(--bg-secondary);
+  position: relative;
+}
+.type-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 .cover-fallback {
   width: 100%;

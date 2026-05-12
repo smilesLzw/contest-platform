@@ -42,6 +42,7 @@ const routes = [
       { path: 'news/:id/edit', name: 'AdminNewsEdit', component: () => import('../views/teacher/NewsFormView.vue') },
       { path: 'ai-tools', name: 'AdminAiTools', component: () => import('../views/admin/AdminAiToolsView.vue') },
       { path: 'users', name: 'AdminUsers', component: () => import('../views/admin/AdminUsersView.vue') },
+      { path: 'bg-music', name: 'AdminBgMusic', component: () => import('../views/admin/AdminBgMusic.vue') },
       { path: 'logs', name: 'AdminLogs', component: () => import('../views/admin/AdminLogsView.vue') },
     ],
   },

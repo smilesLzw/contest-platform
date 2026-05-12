@@ -4,6 +4,7 @@
     <el-main class="main-content">
       <router-view />
     </el-main>
+    <MusicPlayer />
     <AppFooter />
   </el-container>
 </template>
@@ -11,6 +12,7 @@
 <script setup>
 import AppHeader from './AppHeader.vue'
 import AppFooter from './AppFooter.vue'
+import MusicPlayer from './MusicPlayer.vue'
 </script>
 
 <style scoped>

@@ -20,8 +20,15 @@ dist/
 # Uploaded files
 uploads/files/*
 uploads/images/*
+uploads/audio/*
+uploads/videos/*
 !uploads/files/.gitkeep
 !uploads/images/.gitkeep
+!uploads/audio/.gitkeep
+!uploads/videos/.gitkeep
+
+# Claude Code
+.claude/
 
 # Environment
 .env

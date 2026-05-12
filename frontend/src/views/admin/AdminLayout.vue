@@ -44,7 +44,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
-import { DataAnalysis, Collection, Reading, Tools, User, Document } from '@element-plus/icons-vue'
+import { DataAnalysis, Collection, Reading, Tools, User, Document, Headset } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,6 +56,7 @@ const navItems = [
   { path: '/admin/news', label: '新闻管理', icon: Reading },
   { path: '/admin/ai-tools', label: 'AI 工具管理', icon: Tools },
   { path: '/admin/users', label: '用户管理', icon: User },
+  { path: '/admin/bg-music', label: '背景音乐', icon: Headset },
   { path: '/admin/logs', label: '操作日志', icon: Document },
 ]
 
@@ -70,6 +71,7 @@ const routeTitles = {
   '/admin/news': '新闻管理',
   '/admin/ai-tools': 'AI 工具管理',
   '/admin/users': '用户管理',
+  '/admin/bg-music': '背景音乐',
   '/admin/logs': '操作日志',
 }
 const currentTitle = computed(() => routeTitles[route.path] || '管理后台')

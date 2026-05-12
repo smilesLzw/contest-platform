@@ -30,10 +30,15 @@ def _work_to_response(work: Work) -> WorkResponse:
         semester=work.semester,
         contest_name=work.contest_name,
         award=work.award,
+        work_type=work.work_type,
         cover_url=work.cover_url,
         content=work.content,
         demo_url=work.demo_url,
         attachment_url=work.attachment_url,
+        audio_url=work.audio_url,
+        video_url=work.video_url,
+        embed_url=work.embed_url,
+        gallery_urls=work.gallery_urls,
         status=work.status,
         publisher_id=work.publisher_id,
         publisher_name=work.publisher.name if work.publisher else None,
@@ -50,6 +55,7 @@ async def list_works(
     academic_year: str | None = None,
     semester: int | None = None,
     major_id: int | None = None,
+    work_type: str | None = None,
     keyword: str | None = None,
     sort: str = "created_at_desc",
     status: str | None = None,
@@ -69,6 +75,8 @@ async def list_works(
         query = query.where(Work.semester == semester)
     if major_id:
         query = query.where(Work.major_id == major_id)
+    if work_type:
+        query = query.where(Work.work_type == work_type)
     if keyword:
         query = query.where(
             Work.title.contains(keyword) | Work.author_names.contains(keyword)
@@ -203,10 +211,15 @@ async def create_work(
         semester=req.semester,
         contest_name=req.contest_name,
         award=req.award,
+        work_type=req.work_type,
         cover_url=req.cover_url,
         content=req.content,
         demo_url=req.demo_url,
         attachment_url=req.attachment_url,
+        audio_url=req.audio_url,
+        video_url=req.video_url,
+        embed_url=req.embed_url,
+        gallery_urls=req.gallery_urls,
         status=req.status,
         publisher_id=current_user.id,
         published_at=None if req.status == "draft" else func.now(),
