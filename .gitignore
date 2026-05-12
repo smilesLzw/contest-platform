@@ -18,14 +18,14 @@ node_modules/
 dist/
 
 # Uploaded files
-uploads/files/*
-uploads/images/*
-uploads/audio/*
-uploads/videos/*
-!uploads/files/.gitkeep
-!uploads/images/.gitkeep
-!uploads/audio/.gitkeep
-!uploads/videos/.gitkeep
+backend/uploads/files/*
+backend/uploads/images/*
+backend/uploads/audio/*
+backend/uploads/videos/*
+!backend/uploads/files/.gitkeep
+!backend/uploads/images/.gitkeep
+!backend/uploads/audio/.gitkeep
+!backend/uploads/videos/.gitkeep
 
 # Claude Code
 .claude/
