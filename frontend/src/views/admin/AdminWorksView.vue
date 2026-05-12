@@ -1,81 +1,95 @@
 <template>
   <div class="admin-works">
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <el-select v-model="filters.status" placeholder="全部状态" clearable size="default" style="width:120px" @change="search">
-          <el-option label="草稿" value="draft" />
-          <el-option label="已发布" value="published" />
-          <el-option label="已下架" value="archived" />
-        </el-select>
-        <el-select v-model="filters.academic_year" placeholder="全部学年" clearable size="default" style="width:140px" @change="search">
-          <el-option v-for="y in academicYears" :key="y" :label="y" :value="y" />
-        </el-select>
-        <el-input v-model="filters.keyword" placeholder="搜索作品名或作者" clearable size="default" style="width:200px" @keyup.enter="search" />
-        <el-button type="primary" @click="search">搜索</el-button>
+    <el-card shadow="never" class="table-card">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <el-select v-model="filters.status" placeholder="全部状态" clearable size="default" style="width:120px" @change="search">
+            <el-option label="草稿" value="draft" />
+            <el-option label="已发布" value="published" />
+            <el-option label="已下架" value="archived" />
+          </el-select>
+          <el-select v-model="filters.academic_year" placeholder="全部学年" clearable size="default" style="width:140px" @change="search">
+            <el-option v-for="y in academicYears" :key="y" :label="y" :value="y" />
+          </el-select>
+          <el-input v-model="filters.keyword" placeholder="搜索作品名或作者" clearable size="default" style="width:200px" @keyup.enter="search" />
+          <el-button type="primary" @click="search">搜索</el-button>
+        </div>
+        <div class="toolbar-right">
+          <el-button @click="batchPublish" :disabled="!selectedIds.length" size="default"><el-icon style="margin-right:4px"><Upload /></el-icon>批量发布</el-button>
+          <el-button @click="batchArchive" :disabled="!selectedIds.length" size="default"><el-icon style="margin-right:4px"><Folder /></el-icon>批量下架</el-button>
+          <el-button type="primary" size="default" @click="$router.push('/admin/works/create')"><el-icon style="margin-right:4px"><Plus /></el-icon>新建作品</el-button>
+        </div>
       </div>
-      <div class="toolbar-right">
-        <el-button @click="batchPublish" :disabled="!selectedIds.length" size="default">批量发布</el-button>
-        <el-button @click="batchArchive" :disabled="!selectedIds.length" size="default">批量下架</el-button>
-        <el-button type="primary" size="default" @click="$router.push('/admin/works/create')">新建作品</el-button>
+
+      <!-- Table -->
+      <el-table
+        :data="works"
+        v-loading="loading && !isInitial"
+        stripe
+        style="width:100%"
+        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+        @selection-change="(val) => selectedIds = val.map(v => v.id)"
+      >
+        <el-table-column type="selection" width="44" />
+        <el-table-column label="封面" width="64" align="center">
+          <template #default="{ row }">
+            <el-image :src="row.cover_url || ''" style="width:40px;height:28px;border-radius:4px" fit="cover">
+              <template #error><div class="img-ph">—</div></template>
+            </el-image>
+          </template>
+        </el-table-column>
+        <el-table-column prop="title" label="作品名" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="major_name" label="专业" width="110" align="center" />
+        <el-table-column label="学年学期" width="130" align="center">
+          <template #default="{ row }">{{ row.academic_year }} {{ row.semester === 1 ? '上' : '下' }}</template>
+        </el-table-column>
+        <el-table-column label="状态" width="90" align="center">
+          <template #default="{ row }">
+            <span :class="['status-tag', row.status]">
+              {{ { draft: '草稿', published: '已发布', archived: '已下架' }[row.status] }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="publisher_name" label="发布者" width="90" align="center" />
+        <el-table-column label="操作" width="240" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button link type="primary" size="small" @click="$router.push(`/admin/works/${row.id}/edit`)">
+              <el-icon style="margin-right:1px"><Edit /></el-icon>编辑
+            </el-button>
+            <el-button v-if="row.status !== 'published'" link type="success" size="small" @click="handlePublish(row.id)">
+              <el-icon style="margin-right:1px"><Upload /></el-icon>发布
+            </el-button>
+            <el-button v-if="row.status === 'published'" link size="small" @click="handleArchive(row.id)" style="color:var(--amber)">
+              <el-icon style="margin-right:1px"><Folder /></el-icon>下架
+            </el-button>
+            <el-button link size="small" @click="handleDelete(row)" style="color:var(--red)">
+              <el-icon style="margin-right:1px"><Delete /></el-icon>删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!works.length && !loading" description="暂无作品" />
+
+      <div class="pagination" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="page"
+          :page-size="pageSize"
+          :total="total"
+          layout="prev, pager, next, sizes, total"
+          :page-sizes="[20, 50]"
+          v-model:page-size="pageSize"
+          @current-change="loadWorks"
+          @size-change="loadWorks"
+        />
       </div>
-    </div>
-
-    <!-- Table -->
-    <el-table
-      :data="works"
-      v-loading="loading && !isInitial"
-      @selection-change="(val) => selectedIds = val.map(v => v.id)"
-    >
-      <el-table-column type="selection" width="44" />
-      <el-table-column label="封面" width="60">
-        <template #default="{ row }">
-          <el-image :src="row.cover_url || ''" style="width:36px;height:24px;border-radius:4px" fit="cover">
-            <template #error><div class="img-ph">—</div></template>
-          </el-image>
-        </template>
-      </el-table-column>
-      <el-table-column prop="title" label="作品名" min-width="180" show-overflow-tooltip />
-      <el-table-column prop="major_name" label="专业" width="100" />
-      <el-table-column label="学年学期" width="140">
-        <template #default="{ row }">{{ row.academic_year }} {{ row.semester === 1 ? '上' : '下' }}</template>
-      </el-table-column>
-      <el-table-column label="状态" width="80">
-        <template #default="{ row }">
-          <span :class="['status-tag', row.status]">
-            {{ { draft: '草稿', published: '已发布', archived: '已下架' }[row.status] }}
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="publisher_name" label="发布者" width="80" />
-      <el-table-column label="操作" width="220" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" size="small" @click="$router.push(`/admin/works/${row.id}/edit`)">编辑</el-button>
-          <el-button v-if="row.status !== 'published'" link type="primary" size="small" @click="handlePublish(row.id)">发布</el-button>
-          <el-button v-if="row.status === 'published'" link size="small" @click="handleArchive(row.id)" style="color:var(--amber)">下架</el-button>
-          <el-button link size="small" @click="handleDelete(row)" style="color:var(--red)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-empty v-if="!works.length && !loading" description="暂无作品" />
-
-    <div class="pagination" v-if="total > 0">
-      <el-pagination
-        v-model:current-page="page"
-        :page-size="pageSize"
-        :total="total"
-        layout="prev, pager, next, sizes, total"
-        :page-sizes="[20, 50]"
-        v-model:page-size="pageSize"
-        @current-change="loadWorks"
-        @size-change="loadWorks"
-      />
-    </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { Plus, Edit, Upload, Folder, Delete } from '@element-plus/icons-vue'
 import { getAdminWorks, deleteWork, publishWork, archiveWork } from '../../api/works'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -140,6 +154,7 @@ onMounted(loadWorks)
 </script>
 
 <style scoped>
+.table-card :deep(.el-card__body) { padding: 24px; }
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -162,5 +177,5 @@ onMounted(loadWorks)
 .status-tag.archived { background: rgba(255, 149, 0, 0.1); color: var(--amber); }
 
 .pagination { display: flex; justify-content: center; margin-top: 24px; }
-.img-ph { width:36px; height:24px; display:flex; align-items:center; justify-content:center; background:var(--bg-secondary); color:var(--text-tertiary); font-size:10px; border-radius:4px; }
+.img-ph { width:40px; height:28px; display:flex; align-items:center; justify-content:center; background:var(--bg-secondary); color:var(--text-tertiary); font-size:10px; border-radius:4px; }
 </style>

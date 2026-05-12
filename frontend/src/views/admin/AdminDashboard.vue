@@ -21,19 +21,21 @@
     </div>
 
     <!-- Recent logs -->
-    <div class="section">
+    <el-card shadow="never" class="table-card">
       <h3 class="section-title">最近操作日志</h3>
-      <el-table :data="recentLogs" v-loading="logLoading && !isInitial" class="log-table">
-        <el-table-column label="用户ID" prop="user_id" width="70" />
-        <el-table-column label="操作" prop="action" width="140" />
-        <el-table-column label="对象类型" prop="target_type" width="90" />
-        <el-table-column label="详情" prop="detail" min-width="200" show-overflow-tooltip />
-        <el-table-column label="时间" width="170">
+      <el-table :data="recentLogs" v-loading="logLoading && !isInitial" stripe style="width:100%"
+        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+      >
+        <el-table-column label="用户ID" prop="user_id" width="80" align="center" />
+        <el-table-column label="操作" prop="action" width="140" align="center" />
+        <el-table-column label="对象类型" prop="target_type" width="100" align="center" />
+        <el-table-column label="详情" prop="detail" min-width="240" show-overflow-tooltip align="center" />
+        <el-table-column label="时间" width="170" align="center">
           <template #default="{ row }">{{ row.created_at }}</template>
         </el-table-column>
       </el-table>
       <el-empty v-if="!recentLogs.length && !logLoading" description="暂无日志" />
-    </div>
+    </el-card>
   </div>
 </template>
 
@@ -75,7 +77,7 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 36px;
+  margin-bottom: 28px;
 }
 @media (max-width: 900px) {
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -104,16 +106,12 @@ onMounted(async () => {
 }
 
 /* Log section */
-.section { margin-top: 8px; }
+.table-card :deep(.el-card__body) { padding: 24px; }
 .section-title {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 14px;
   letter-spacing: -0.02em;
-}
-.log-table {
-  border-radius: var(--radius-md);
-  overflow: hidden;
 }
 </style>

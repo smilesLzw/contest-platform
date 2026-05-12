@@ -1,56 +1,69 @@
 <template>
   <div class="admin-ai-tools">
     <!-- Categories -->
-    <section class="section">
+    <el-card shadow="never" class="table-card">
       <div class="toolbar">
         <h3 class="section-label">分类管理</h3>
-        <el-button size="default" @click="openCategoryDialog()">新增分类</el-button>
+        <el-button size="default" @click="openCategoryDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新增分类</el-button>
       </div>
-      <el-table :data="categories">
-        <el-table-column prop="name" label="分类名称" />
-        <el-table-column prop="icon" label="图标" width="100" />
-        <el-table-column prop="sort_order" label="排序" width="80" />
-        <el-table-column label="操作" width="140">
+      <el-table :data="categories" stripe
+        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+      >
+        <el-table-column prop="name" label="分类名称" width="200" align="center" />
+        <el-table-column prop="icon" label="图标" width="120" align="center" />
+        <el-table-column prop="sort_order" label="排序" width="90" align="center" />
+        <el-table-column label="操作" width="160" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openCategoryDialog(row)">编辑</el-button>
-            <el-button link size="small" @click="handleDeleteCategory(row)" style="color:var(--red)">删除</el-button>
+            <el-button link type="primary" size="small" @click="openCategoryDialog(row)">
+              <el-icon style="margin-right:1px"><Edit /></el-icon>编辑
+            </el-button>
+            <el-button link size="small" @click="handleDeleteCategory(row)" style="color:var(--red)">
+              <el-icon style="margin-right:1px"><Delete /></el-icon>删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
-    </section>
+      <el-empty v-if="!categories.length" description="暂无分类" />
+    </el-card>
 
     <!-- Tools -->
-    <section class="section">
+    <el-card shadow="never" class="table-card section">
       <div class="toolbar">
         <h3 class="section-label">工具管理</h3>
-        <el-button type="primary" size="default" @click="openToolDialog()">新增工具</el-button>
+        <el-button type="primary" size="default" @click="openToolDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新增工具</el-button>
       </div>
-      <el-table :data="tools">
-        <el-table-column prop="name" label="工具名称" width="120" />
-        <el-table-column prop="category_name" label="分类" width="100" />
-        <el-table-column label="区域" width="70">
+      <el-table :data="tools" stripe style="width:100%"
+        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+      >
+        <el-table-column prop="name" label="工具名称" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="category_name" label="分类" width="100" align="center" />
+        <el-table-column label="区域" width="70" align="center">
           <template #default="{ row }">{{ row.region === 'domestic' ? '国内' : '国外' }}</template>
         </el-table-column>
-        <el-table-column prop="url" label="官网链接" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="description" label="简介" min-width="160" show-overflow-tooltip />
-        <el-table-column label="免费" width="60">
+        <el-table-column prop="url" label="官网链接" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="description" label="简介" min-width="180" show-overflow-tooltip />
+        <el-table-column label="免费" width="60" align="center">
           <template #default="{ row }">
             <span :class="['inline-tag', row.is_free ? 'yes' : 'no']">{{ row.is_free ? '是' : '否' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="精选" width="60">
+        <el-table-column label="精选" width="60" align="center">
           <template #default="{ row }">
             <span v-if="row.is_featured" class="inline-tag featured">是</span>
             <span v-else style="color:var(--text-tertiary)">—</span>
           </template>
         </el-table-column>
-        <el-table-column label="评分" width="70">
+        <el-table-column label="评分" width="70" align="center">
           <template #default="{ row }">★ {{ row.rating }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="140" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openToolDialog(row)">编辑</el-button>
-            <el-button link size="small" @click="handleDeleteTool(row)" style="color:var(--red)">删除</el-button>
+            <el-button link type="primary" size="small" @click="openToolDialog(row)">
+              <el-icon style="margin-right:1px"><Edit /></el-icon>编辑
+            </el-button>
+            <el-button link size="small" @click="handleDeleteTool(row)" style="color:var(--red)">
+              <el-icon style="margin-right:1px"><Delete /></el-icon>删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -66,7 +79,7 @@
           @size-change="loadTools"
         />
       </div>
-    </section>
+    </el-card>
 
     <!-- Category dialog -->
     <el-dialog v-model="categoryDialog.visible" :title="categoryDialog.isEdit ? '编辑分类' : '新增分类'" width="400px">
@@ -138,6 +151,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import {
   getCategories, createCategory, updateCategory, deleteCategory,
   getTools, createTool, updateTool, deleteTool,
@@ -251,7 +265,8 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.section { margin-bottom: 36px; }
+.section { margin-top: 24px; }
+.table-card :deep(.el-card__body) { padding: 24px; }
 .toolbar {
   display: flex;
   justify-content: space-between;

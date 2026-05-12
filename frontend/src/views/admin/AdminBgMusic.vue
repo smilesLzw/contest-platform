@@ -1,38 +1,41 @@
 <template>
   <div class="bg-music-admin">
-    <div class="page-header">
-      <h1 class="page-title">背景音乐管理</h1>
-      <el-button type="primary" @click="openDialog()">添加音乐</el-button>
-    </div>
+    <el-card shadow="never" class="table-card">
+      <div class="toolbar">
+        <h3 class="section-label">背景音乐管理</h3>
+        <el-button type="primary" @click="openDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>添加音乐</el-button>
+      </div>
 
-    <el-card shadow="never">
-      <el-table :data="list" v-loading="loading" stripe>
+      <el-table :data="list" v-loading="loading" stripe style="width:100%"
+        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+      >
         <el-table-column prop="sort_order" label="排序" width="70" align="center" />
-        <el-table-column prop="title" label="曲目标题" min-width="180" />
-        <el-table-column prop="artist" label="艺术家" width="140" />
-        <el-table-column label="来源" width="100" align="center">
+        <el-table-column prop="title" label="曲目标题" min-width="240" show-overflow-tooltip align="center" />
+        <el-table-column prop="artist" label="艺术家" width="150" align="center" />
+        <el-table-column label="来源" width="90" align="center">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.source === 'preset' ? 'primary' : 'success'">
+            <span :class="['source-tag', row.source]">
               {{ row.source === 'preset' ? '预置' : '学生' }}
-            </el-tag>
+            </span>
           </template>
         </el-table-column>
-        <el-table-column prop="is_active" label="状态" width="80" align="center">
+        <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
-            <el-switch :model-value="row.is_active" @change="toggleActive(row)" />
+            <el-switch :model-value="row.is_active" size="small" @change="toggleActive(row)" />
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160" align="center">
+        <el-table-column label="操作" width="180" align="center">
           <template #default="{ row }">
-            <el-button text type="primary" size="small" @click="openDialog(row)">编辑</el-button>
-            <el-popconfirm title="确认删除？" @confirm="handleDelete(row)">
-              <template #reference>
-                <el-button text type="danger" size="small">删除</el-button>
-              </template>
-            </el-popconfirm>
+            <el-button link type="primary" size="small" @click="openDialog(row)">
+              <el-icon style="margin-right:1px"><Edit /></el-icon>编辑
+            </el-button>
+            <el-button link size="small" @click="handleDelete(row)" style="color:var(--red)">
+              <el-icon style="margin-right:1px"><Delete /></el-icon>删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
+      <el-empty v-if="!list.length && !loading" description="暂无背景音乐" />
     </el-card>
 
     <!-- 添加/编辑对话框 -->
@@ -70,8 +73,9 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { uploadAudio, getAdminBgMusic, createBgMusic, updateBgMusic, deleteBgMusic, toggleBgMusic } from '../../api/common'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const list = ref([])
 const loading = ref(false)
@@ -156,22 +160,28 @@ async function toggleActive(row) {
 
 async function handleDelete(row) {
   try {
+    await ElMessageBox.confirm(`确定删除"${row.title}"？`, '删除确认', { type: 'warning' })
     await deleteBgMusic(row.id)
     ElMessage.success('删除成功')
     await loadList()
-  } catch (e) { console.error(e) }
+  } catch (e) { if (e !== 'cancel') console.error(e) }
 }
 
 onMounted(() => loadList())
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.table-card :deep(.el-card__body) { padding: 24px; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.section-label { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; }
+.file-hint { margin-left: 10px; font-size: 13px; color: var(--text-tertiary); }
+
+.source-tag {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 10px;
 }
-.page-title { font-size: 24px; }
-.file-hint { margin-left: 10px; font-size: 13px; color: #909399; }
+.source-tag.preset { background: rgba(0, 113, 227, 0.08); color: var(--accent); }
+.source-tag.student { background: rgba(52, 199, 89, 0.1); color: var(--green); }
 </style>

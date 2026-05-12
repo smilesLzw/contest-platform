@@ -1,64 +1,61 @@
 <template>
   <div class="admin-users">
-    <div class="toolbar">
-      <h3 class="section-label">教师账号</h3>
-      <el-button type="primary" size="default" @click="openDialog()">新建教师</el-button>
-    </div>
+    <el-card shadow="never" class="table-card">
+      <div class="toolbar">
+        <h3 class="section-label">教师账号</h3>
+        <el-button type="primary" @click="openDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新建教师</el-button>
+      </div>
 
-    <el-table :data="users" v-loading="loading && !isInitial">
-      <el-table-column prop="name" label="姓名" width="90" />
-      <el-table-column prop="username" label="工号" width="110" />
-      <el-table-column prop="department" label="院系" width="150" />
-      <el-table-column label="状态" width="70">
-        <template #default="{ row }">
-          <span :class="['status-tag', row.status ? 'on' : 'off']">
-            {{ row.status ? '启用' : '禁用' }}
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="创建时间" width="130">
-        <template #default="{ row }">{{ row.created_at?.slice(0, 10) }}</template>
-      </el-table-column>
-      <el-table-column label="操作" width="220" fixed="right">
-        <template #default="{ row }">
-          <el-button link type="primary" size="small" @click="openDialog(row)">编辑</el-button>
-          <el-button link size="small" @click="handleToggleStatus(row)" :style="{ color: row.status ? 'var(--amber)' : 'var(--green)' }">
-            {{ row.status ? '禁用' : '启用' }}
-          </el-button>
-          <el-button link size="small" @click="handleResetPwd(row)" style="color:var(--red)">重置密码</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-empty v-if="!users.length && !loading" description="暂无教师" />
+      <el-table :data="users" v-loading="loading && !isInitial" stripe style="width:100%"
+        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+      >
+        <el-table-column prop="name" label="姓名" min-width="120" align="center" />
+        <el-table-column prop="username" label="工号" width="110" align="center" />
+        <el-table-column prop="department" label="院系" min-width="180" align="center" />
+        <el-table-column label="状态" width="80" align="center">
+          <template #default="{ row }">
+            <span :class="['status-tag', row.status ? 'on' : 'off']">
+              {{ row.status ? '启用' : '禁用' }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" width="130" align="center">
+          <template #default="{ row }">{{ row.created_at?.slice(0, 10) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="240" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button link type="primary" size="small" @click="openDialog(row)">
+              <el-icon style="margin-right:2px"><Edit /></el-icon>编辑
+            </el-button>
+            <el-button link size="small" @click="handleToggleStatus(row)" :style="{ color: row.status ? 'var(--amber)' : 'var(--green)' }">
+              <el-icon style="margin-right:2px"><SwitchButton /></el-icon>{{ row.status ? '禁用' : '启用' }}
+            </el-button>
+            <el-button link size="small" @click="handleResetPwd(row)" style="color:var(--red)">
+              <el-icon style="margin-right:2px"><Key /></el-icon>重置密码
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-empty v-if="!users.length && !loading" description="暂无教师" />
 
-    <div class="pagination" v-if="total > 0">
-      <el-pagination
-        v-model:current-page="page"
-        :page-size="pageSize"
-        :total="total"
-        layout="prev, pager, next, sizes, total"
-        :page-sizes="[20, 50]"
-        v-model:page-size="pageSize"
-        @current-change="loadUsers"
-        @size-change="loadUsers"
-      />
-    </div>
+      <div class="pagination" v-if="total > 0">
+        <el-pagination
+          v-model:current-page="page" :page-size="pageSize" :total="total"
+          layout="prev, pager, next, sizes, total" :page-sizes="[20, 50]"
+          v-model:page-size="pageSize"
+          @current-change="loadUsers" @size-change="loadUsers"
+        />
+      </div>
+    </el-card>
 
-    <!-- Dialog -->
     <el-dialog v-model="dialog.visible" :title="dialog.isEdit ? '编辑教师' : '新建教师'" width="420px">
       <el-form :model="form" label-width="72px">
-        <el-form-item label="姓名">
-          <el-input v-model="form.name" />
-        </el-form-item>
-        <el-form-item label="工号">
-          <el-input v-model="form.username" :disabled="dialog.isEdit" />
-        </el-form-item>
+        <el-form-item label="姓名"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="工号"><el-input v-model="form.username" :disabled="dialog.isEdit" /></el-form-item>
         <el-form-item label="密码" v-if="!dialog.isEdit">
           <el-input v-model="form.password" type="password" show-password placeholder="至少 8 位，包含字母和数字" />
         </el-form-item>
-        <el-form-item label="院系">
-          <el-input v-model="form.department" />
-        </el-form-item>
+        <el-form-item label="院系"><el-input v-model="form.department" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialog.visible = false">取消</el-button>
@@ -70,6 +67,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { Plus, Edit, SwitchButton, Key } from '@element-plus/icons-vue'
 import { getUsers, createUser, updateUser, toggleUserStatus, resetPassword } from '../../api/users'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -142,27 +140,11 @@ onMounted(loadUsers)
 </script>
 
 <style scoped>
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-.section-label {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.02em;
-}
-
-.status-tag {
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 10px;
-}
+.table-card :deep(.el-card__body) { padding: 24px; }
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.section-label { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; }
+.status-tag { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
 .status-tag.on { background: rgba(52, 199, 89, 0.1); color: var(--green); }
 .status-tag.off { background: rgba(255, 59, 48, 0.08); color: var(--red); }
-
 .pagination { display: flex; justify-content: center; margin-top: 24px; }
 </style>
