@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 from app.database import get_db
 from app.models.news import News
 from app.models.user import User
-from app.core.deps import get_current_user, require_teacher_or_admin, require_admin
+from app.core.deps import get_optional_user, require_teacher_or_admin, require_admin
 from app.schemas.news import NewsCreate, NewsUpdate, NewsResponse
 from app.schemas.common import ApiResponse, PageData
 from app.crud.log import create_log
@@ -105,15 +105,66 @@ async def list_my_news(
     ))
 
 
+@router.get("/admin/all", response_model=ApiResponse[PageData[NewsResponse]])
+async def admin_list_news(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+    status: str | None = None,
+    category: str | None = None,
+    keyword: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    """管理员查看所有新闻（含草稿）"""
+    query = select(News).options(joinedload(News.author))
+
+    if status:
+        query = query.where(News.status == status)
+    if category:
+        query = query.where(News.category == category)
+    if keyword:
+        query = query.where(News.title.contains(keyword))
+
+    query = query.order_by(desc(News.is_top), desc(News.created_at))
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+
+    query = query.offset((page - 1) * page_size).limit(page_size)
+    result = await db.execute(query)
+    news_list = result.unique().scalars().all()
+
+    return ApiResponse(data=PageData(
+        items=[_news_to_response(n) for n in news_list],
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=math.ceil(total / page_size) if page_size > 0 else 0,
+    ))
+
+
 @router.get("/{news_id}", response_model=ApiResponse[NewsResponse])
-async def get_news(news_id: int, db: AsyncSession = Depends(get_db)):
-    """新闻详情"""
+async def get_news(
+    news_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
+):
+    """新闻详情：已发布公开可见，草稿仅作者或管理员可见"""
     result = await db.execute(
         select(News).options(joinedload(News.author)).where(News.id == news_id)
     )
     news = result.unique().scalar_one_or_none()
-    if not news or news.status != "published":
+    if not news:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="新闻不存在")
+
+    can_view_private = (
+        current_user is not None
+        and (current_user.role == "admin" or news.author_id == current_user.id)
+    )
+    if news.status != "published" and not can_view_private:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="新闻不存在")
+
     return ApiResponse(data=_news_to_response(news))
 
 
@@ -156,8 +207,11 @@ async def update_news(
     if current_user.role != "admin" and news.author_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只能编辑自己的新闻")
 
+    old_status = news.status
     for field, value in req.model_dump(exclude_unset=True).items():
         setattr(news, field, value)
+    if old_status != "published" and news.status == "published" and news.published_at is None:
+        news.published_at = func.now()
     await db.commit()
     await db.refresh(news)
     return ApiResponse(data=_news_to_response(news))

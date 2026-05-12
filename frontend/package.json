@@ -9,11 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.3.0",
+    "vue": "^3.4.0",
     "vue-router": "^4.2.0",
     "pinia": "^2.1.0",
     "axios": "^1.6.0",
-    "element-plus": "^2.4.0",
+    "element-plus": "^2.7.0",
     "md-editor-v3": "^4.0.0",
     "@element-plus/icons-vue": "^2.3.0"
   },

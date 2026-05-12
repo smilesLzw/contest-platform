@@ -29,7 +29,7 @@ request.interceptors.response.use(
     if (res.code === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('userInfo')
-      window.location.href = '/login'
+      window.location.href = '/admin/login'
       return Promise.reject(new Error('未登录'))
     }
     return Promise.reject(new Error(res.message))
@@ -38,7 +38,7 @@ request.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('userInfo')
-      window.location.href = '/login'
+      window.location.href = '/admin/login'
       return Promise.reject(new Error('未登录'))
     }
     // 格式化 FastAPI 422 验证错误

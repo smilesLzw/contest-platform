@@ -12,6 +12,10 @@ export function getMyNews(params) {
   return request.get('/news/my', { params })
 }
 
+export function getAdminNews(params) {
+  return request.get('/news/admin/all', { params })
+}
+
 export function createNews(data) {
   return request.post('/news/', data)
 }

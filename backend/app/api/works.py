@@ -7,9 +7,8 @@ from sqlalchemy.orm import joinedload
 
 from app.database import get_db
 from app.models.work import Work
-from app.models.major import Major
 from app.models.user import User
-from app.core.deps import get_current_user, require_teacher_or_admin, require_admin
+from app.core.deps import get_optional_user, require_teacher_or_admin, require_admin
 from app.schemas.work import WorkCreate, WorkUpdate, WorkResponse
 from app.schemas.common import ApiResponse, PageData
 from app.crud.log import create_log
@@ -61,11 +60,14 @@ async def list_works(
     sort: str = "created_at_desc",
     status: str | None = None,
     db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
 ):
     """作品列表（公开仅 published，管理员可传 status 参数）"""
     query = select(Work).options(joinedload(Work.major), joinedload(Work.publisher))
 
     if status:
+        if current_user is None or current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="需要管理员权限")
         query = query.where(Work.status == status)
     else:
         query = query.where(Work.status == "published")
@@ -183,16 +185,28 @@ async def admin_list_works(
 
 
 @router.get("/{work_id}", response_model=ApiResponse[WorkResponse])
-async def get_work(work_id: int, db: AsyncSession = Depends(get_db)):
-    """作品详情"""
+async def get_work(
+    work_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
+):
+    """作品详情：已发布公开可见，草稿/下架仅作者或管理员可见"""
     result = await db.execute(
         select(Work)
         .options(joinedload(Work.major), joinedload(Work.publisher))
         .where(Work.id == work_id)
     )
     work = result.unique().scalar_one_or_none()
-    if not work or work.status != "published":
+    if not work:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="作品不存在")
+
+    can_view_private = (
+        current_user is not None
+        and (current_user.role == "admin" or work.publisher_id == current_user.id)
+    )
+    if work.status != "published" and not can_view_private:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="作品不存在")
+
     return ApiResponse(data=_work_to_response(work))
 
 
@@ -252,8 +266,11 @@ async def update_work(
     if current_user.role != "admin" and work.publisher_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只能编辑自己的作品")
 
+    old_status = work.status
     for field, value in req.model_dump(exclude_unset=True).items():
         setattr(work, field, value)
+    if old_status != "published" and work.status == "published" and work.published_at is None:
+        work.published_at = func.now()
     await db.commit()
     await db.refresh(work)
     return ApiResponse(data=_work_to_response(work))

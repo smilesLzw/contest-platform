@@ -64,7 +64,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Plus, Edit, Upload, Top, Delete } from '@element-plus/icons-vue'
-import { getNewsList, deleteNews, publishNews, toggleTopNews } from '../../api/news'
+import { getAdminNews, deleteNews, publishNews, toggleTopNews } from '../../api/news'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const newsList = ref([])
@@ -81,7 +81,7 @@ function categoryLabel(c) {
 async function loadNews() {
   loading.value = true
   try {
-    const res = await getNewsList({ page: page.value, page_size: pageSize.value })
+    const res = await getAdminNews({ page: page.value, page_size: pageSize.value })
     newsList.value = res.data.items || []
     total.value = res.data.total
   } catch (e) { console.error(e) }
