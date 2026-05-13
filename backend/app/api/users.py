@@ -2,10 +2,11 @@
 import math
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, update
 
 from app.database import get_db
 from app.models.user import User
+from app.models.work import Work
 from app.core.deps import require_admin
 from app.core.security import hash_password
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
@@ -69,6 +70,7 @@ async def create_user(
         password_hash=hash_password(req.password),
         name=req.name,
         department=req.department,
+        phone=req.phone,
         role="teacher",
     )
     db.add(user)
@@ -90,10 +92,20 @@ async def update_user(
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
+    old_name = user.name
+    if req.username is not None and req.username != user.username:
+        result = await db.execute(select(User).where(User.username == req.username, User.id != user.id))
+        if result.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="工号已存在")
+        user.username = req.username
     if req.name is not None:
         user.name = req.name
     if req.department is not None:
         user.department = req.department
+    if req.phone is not None:
+        user.phone = req.phone
+    if req.name is not None and req.name != old_name:
+        await db.execute(update(Work).where(Work.guide_teacher == old_name).values(guide_teacher=req.name))
     await db.commit()
     await db.refresh(user)
     return ApiResponse(data=UserResponse.model_validate(user))

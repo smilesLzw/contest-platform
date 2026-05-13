@@ -8,12 +8,15 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=8, description="密码，至少8位")
     name: str = Field(..., max_length=50)
     department: str | None = None
+    phone: str | None = Field(None, max_length=30)
     role: str = "teacher"
 
 
 class UserUpdate(BaseModel):
-    name: str | None = None
+    username: str | None = Field(None, min_length=1, max_length=50)
+    name: str | None = Field(None, min_length=1, max_length=50)
     department: str | None = None
+    phone: str | None = Field(None, max_length=30)
 
 
 class UserResponse(BaseModel):
@@ -22,6 +25,7 @@ class UserResponse(BaseModel):
     role: str
     name: str
     department: str | None = None
+    phone: str | None = None
     avatar_url: str | None = None
     status: int = 1
     created_at: datetime | None = None

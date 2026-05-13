@@ -10,20 +10,21 @@
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
       >
         <el-table-column type="index" label="序号" width="70" align="center" />
-        <el-table-column prop="name" label="姓名" width="130" align="center" show-overflow-tooltip />
-        <el-table-column prop="username" label="工号" width="130" align="center" show-overflow-tooltip />
-        <el-table-column prop="department" label="院系" width="330" align="center" show-overflow-tooltip />
-        <el-table-column label="状态" width="90" align="center">
+        <el-table-column prop="name" label="姓名" width="120" align="center" show-overflow-tooltip />
+        <el-table-column prop="username" label="工号" width="120" align="center" show-overflow-tooltip />
+        <el-table-column prop="phone" label="电话" width="140" align="center" show-overflow-tooltip />
+        <el-table-column prop="department" label="院系" width="230" align="center" show-overflow-tooltip />
+        <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
             <span :class="['status-tag', row.status ? 'on' : 'off']">
               {{ row.status ? '启用' : '禁用' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="130" align="center">
+        <el-table-column label="创建时间" width="120" align="center">
           <template #default="{ row }">{{ row.created_at?.slice(0, 10) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="240" align="center">
+        <el-table-column label="操作" width="220" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openDialog(row)">
               <el-icon style="margin-right:2px"><Edit /></el-icon>编辑
@@ -53,6 +54,7 @@
       <el-form :model="form" label-width="72px">
         <el-form-item label="姓名"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="工号"><el-input v-model="form.username" :disabled="dialog.isEdit" /></el-form-item>
+        <el-form-item label="电话"><el-input v-model="form.phone" /></el-form-item>
         <el-form-item label="密码" v-if="!dialog.isEdit">
           <el-input v-model="form.password" type="password" show-password placeholder="至少 8 位，包含字母和数字" />
         </el-form-item>
@@ -81,7 +83,7 @@ const isInitial = ref(true)
 const saving = ref(false)
 
 const dialog = reactive({ visible: false, isEdit: false, editId: null })
-const form = reactive({ name: '', username: '', password: '', department: '' })
+const form = reactive({ name: '', username: '', password: '', department: '', phone: '' })
 
 async function loadUsers() {
   loading.value = true
@@ -96,10 +98,10 @@ async function loadUsers() {
 function openDialog(row) {
   if (row) {
     dialog.isEdit = true; dialog.editId = row.id
-    form.name = row.name; form.username = row.username; form.password = ''; form.department = row.department || ''
+    form.name = row.name; form.username = row.username; form.password = ''; form.department = row.department || ''; form.phone = row.phone || ''
   } else {
     dialog.isEdit = false; dialog.editId = null
-    form.name = ''; form.username = ''; form.password = ''; form.department = ''
+    form.name = ''; form.username = ''; form.password = ''; form.department = ''; form.phone = ''
   }
   dialog.visible = true
 }
@@ -110,10 +112,10 @@ async function saveUser() {
   saving.value = true
   try {
     if (dialog.isEdit) {
-      await updateUser(dialog.editId, { name: form.name, department: form.department })
+      await updateUser(dialog.editId, { name: form.name, department: form.department, phone: form.phone })
       ElMessage.success('更新成功')
     } else {
-      await createUser({ username: form.username, password: form.password, name: form.name, department: form.department })
+      await createUser({ username: form.username, password: form.password, name: form.name, department: form.department, phone: form.phone })
       ElMessage.success('创建成功')
     }
     dialog.visible = false; loadUsers()

@@ -1,10 +1,11 @@
 """认证接口"""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.database import get_db
 from app.models.user import User
+from app.models.work import Work
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.deps import get_current_user
 from app.schemas.auth import (
@@ -45,12 +46,23 @@ async def update_me(
     current_user: User = Depends(get_current_user),
 ):
     """修改个人信息"""
+    old_name = current_user.name
+
+    if req.username is not None and req.username != current_user.username:
+        result = await db.execute(select(User).where(User.username == req.username, User.id != current_user.id))
+        if result.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="工号/账号已存在")
+        current_user.username = req.username
     if req.name is not None:
         current_user.name = req.name
     if req.department is not None:
         current_user.department = req.department
+    if req.phone is not None:
+        current_user.phone = req.phone
     if req.avatar_url is not None:
         current_user.avatar_url = req.avatar_url
+    if req.name is not None and req.name != old_name:
+        await db.execute(update(Work).where(Work.guide_teacher == old_name).values(guide_teacher=req.name))
     await db.commit()
     await db.refresh(current_user)
     return ApiResponse(data=UserInfo.model_validate(current_user))

@@ -19,6 +19,7 @@ class UserInfo(BaseModel):
     role: str
     name: str
     department: str | None = None
+    phone: str | None = None
     avatar_url: str | None = None
 
     class Config:
@@ -26,8 +27,10 @@ class UserInfo(BaseModel):
 
 
 class UpdateProfileRequest(BaseModel):
-    name: str | None = None
-    department: str | None = None
+    username: str | None = Field(None, min_length=1, max_length=50, description="工号/账号")
+    name: str | None = Field(None, min_length=1, max_length=50)
+    department: str | None = Field(None, max_length=100)
+    phone: str | None = Field(None, max_length=30)
     avatar_url: str | None = None
 
 

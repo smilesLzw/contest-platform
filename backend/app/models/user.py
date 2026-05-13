@@ -14,6 +14,7 @@ class User(Base):
     role: Mapped[str] = mapped_column(Enum("admin", "teacher"), nullable=False, comment="角色")
     name: Mapped[str] = mapped_column(String(50), nullable=False, comment="真实姓名")
     department: Mapped[str] = mapped_column(String(100), nullable=True, comment="所属院系")
+    phone: Mapped[str] = mapped_column(String(30), nullable=True, comment="联系电话")
     avatar_url: Mapped[str] = mapped_column(String(500), nullable=True)
     status: Mapped[int] = mapped_column(SmallInteger, default=1, comment="1启用 0禁用")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)

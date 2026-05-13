@@ -1,12 +1,20 @@
 <template>
   <div class="profile-page">
-    <h1 class="page-title">个人中心</h1>
+    <section class="profile-hero">
+      <el-avatar :size="72" :src="profileForm.avatar_url || ''">
+        {{ profileForm.name?.charAt(0) }}
+      </el-avatar>
+      <div class="profile-title">
+        <h1>{{ profileForm.name || '个人资料' }}</h1>
+        <p>{{ profileForm.role === 'admin' ? '管理员' : '教师' }} · {{ profileForm.department || '未填写院系' }}</p>
+      </div>
+    </section>
 
-    <el-row :gutter="20">
-      <el-col :span="12">
-        <el-card shadow="never">
+    <el-row :gutter="24">
+      <el-col :xs="24" :lg="14">
+        <el-card shadow="never" class="profile-card">
           <template #header><span>基本信息</span></template>
-          <el-form :model="profileForm" label-width="80px">
+          <el-form :model="profileForm" label-width="84px" class="profile-form">
             <el-form-item label="头像">
               <el-upload
                 :show-file-list="false"
@@ -22,7 +30,10 @@
               <el-input v-model="profileForm.name" />
             </el-form-item>
             <el-form-item label="工号">
-              <el-input v-model="profileForm.username" disabled />
+              <el-input v-model="profileForm.username" />
+            </el-form-item>
+            <el-form-item label="电话">
+              <el-input v-model="profileForm.phone" />
             </el-form-item>
             <el-form-item label="院系">
               <el-input v-model="profileForm.department" />
@@ -37,8 +48,8 @@
         </el-card>
       </el-col>
 
-      <el-col :span="12">
-        <el-card shadow="never">
+      <el-col :xs="24" :lg="10">
+        <el-card shadow="never" class="profile-card">
           <template #header><span>修改密码</span></template>
           <el-form :model="pwdForm" ref="pwdFormRef" :rules="pwdRules" label-width="100px">
             <el-form-item label="原密码" prop="old_password">
@@ -73,6 +84,7 @@ const profileForm = reactive({
   username: '',
   name: '',
   department: '',
+  phone: '',
   role: '',
   avatar_url: '',
 })
@@ -109,6 +121,7 @@ function loadUserInfo() {
     profileForm.username = u.username || ''
     profileForm.name = u.name || ''
     profileForm.department = u.department || ''
+    profileForm.phone = u.phone || ''
     profileForm.role = u.role || ''
     profileForm.avatar_url = u.avatar_url || ''
   }
@@ -125,11 +138,17 @@ async function handleAvatarUpload({ file }) {
 }
 
 async function saveProfile() {
+  if (!profileForm.name || !profileForm.username) {
+    ElMessage.warning('请填写姓名和工号')
+    return
+  }
   saving.value = true
   try {
     const res = await updateProfile({
+      username: profileForm.username,
       name: profileForm.name,
       department: profileForm.department,
+      phone: profileForm.phone,
       avatar_url: profileForm.avatar_url,
     })
     authStore.setUserInfo(res.data)
@@ -165,5 +184,34 @@ onMounted(loadUserInfo)
 </script>
 
 <style scoped>
-.page-title { font-size: 24px; margin-bottom: 20px; }
+.profile-page {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.profile-title h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0;
+  margin-bottom: 4px;
+}
+.profile-title p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.profile-card {
+  min-height: 100%;
+}
+.profile-card :deep(.el-card__header) {
+  font-weight: 600;
+}
+.profile-form :deep(.el-avatar) {
+  cursor: pointer;
+}
 </style>
