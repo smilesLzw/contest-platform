@@ -33,16 +33,23 @@ echo "📦 进入服务器项目目录：$PROJECT_DIR"
 cd "$PROJECT_DIR"
 
 echo "⬇️ 拉取最新代码..."
+OLD_SHA="$(git rev-parse HEAD)"
 git fetch origin "$BRANCH"
 git checkout "$BRANCH"
 git pull --ff-only origin "$BRANCH"
+NEW_SHA="$(git rev-parse HEAD)"
 
-echo "🧱 执行数据库迁移..."
-cd "$PROJECT_DIR/backend"
-if [ -x "venv/bin/alembic" ]; then
-  venv/bin/alembic upgrade head
+if [ "$OLD_SHA" != "$NEW_SHA" ] && [ -n "$(git diff --name-only "$OLD_SHA" "$NEW_SHA" -- backend/alembic/versions)" ]; then
+  echo "🧱 检测到数据库迁移文件变更，执行数据库迁移..."
+  cd "$PROJECT_DIR/backend"
+  if [ -x "venv/bin/alembic" ]; then
+    venv/bin/alembic upgrade head
+  else
+    alembic upgrade head
+  fi
+  cd "$PROJECT_DIR"
 else
-  alembic upgrade head
+  echo "💡 本次没有数据库迁移文件变更，跳过 alembic upgrade。"
 fi
 
 echo "🔁 尝试重启后端服务..."
