@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [ "${DEPLOY_SKIP_PRE_PUSH:-}" = "1" ]; then
+  exit 0
+fi
+
+ROOT_DIR="$(git rev-parse --show-toplevel)"
+BRANCH="$(git -C "$ROOT_DIR" rev-parse --abbrev-ref HEAD)"
+SERVER_USER="${SERVER_USER:-admin}"
+SERVER_IP="${SERVER_IP:-47.108.139.130}"
+PROJECT_DIR="${PROJECT_DIR:-/home/$SERVER_USER/project/contest-platform}"
+TARGET_BRANCH="$BRANCH"
+TARGET_SHA="$(git -C "$ROOT_DIR" rev-parse HEAD)"
+ZERO_SHA="0000000000000000000000000000000000000000"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/master" ]; then
+    TARGET_BRANCH="master"
+    TARGET_SHA="$local_sha"
+  fi
+done
+
+if [ "$TARGET_BRANCH" != "master" ] || [ "$TARGET_SHA" = "$ZERO_SHA" ]; then
+  echo "💡 当前推送目标不是 master，跳过自动部署准备。"
+  exit 0
+fi
+
+echo "🚀 即将推送 master，先构建前端 dist..."
+cd "$ROOT_DIR/frontend"
+npm run build
+
+echo "☁️ 同步 dist 到服务器..."
+rsync -avz --delete "$ROOT_DIR/frontend/dist/" "$SERVER_USER@$SERVER_IP:$PROJECT_DIR/frontend/dist/"
+
+echo "🕒 已启动 push 后服务器更新任务，日志：$ROOT_DIR/.git/remote-update-after-push.log"
+nohup "$ROOT_DIR/scripts/remote_update_after_push.sh" "$TARGET_BRANCH" "$TARGET_SHA" \
+  > "$ROOT_DIR/.git/remote-update-after-push.log" 2>&1 &
