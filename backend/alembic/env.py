@@ -15,7 +15,7 @@ sync_db_url = env_db_url.replace("mysql+asyncmy://", "mysql+pymysql://")
 
 config = context.config
 if sync_db_url:
-    config.set_main_option("sqlalchemy.url", sync_db_url)
+    config.set_main_option("sqlalchemy.url", sync_db_url.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
