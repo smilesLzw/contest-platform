@@ -124,6 +124,41 @@ body {
   --el-table-text-color: var(--text-primary);
   --el-table-header-text-color: var(--text-secondary);
   --el-table-row-hover-bg-color: var(--bg-card-hover);
+  border-radius: var(--radius-sm) !important;
+  overflow: hidden;
+}
+.el-table__inner-wrapper {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+/* Admin table rhythm */
+.admin-standard-card {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.admin-standard-card .el-card__body {
+  padding: 24px 30px !important;
+}
+.admin-standard-card .toolbar,
+.admin-standard-card .section-title,
+.admin-standard-card .pagination {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.admin-standard-table {
+  width: min(100%, 1120px) !important;
+  margin: 0 auto;
+}
+.admin-standard-table .el-table__cell {
+  text-align: center !important;
+}
+.admin-standard-table .cell {
+  text-align: center;
+}
+.admin-standard-table .el-button + .el-button {
+  margin-left: 8px;
 }
 
 /* Input */

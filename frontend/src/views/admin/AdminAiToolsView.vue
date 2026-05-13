@@ -4,15 +4,21 @@
     <el-card shadow="never" class="table-card">
       <div class="toolbar">
         <h3 class="section-label">分类管理</h3>
-        <el-button size="default" @click="openCategoryDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新增分类</el-button>
+        <div class="toolbar-actions">
+          <el-button @click="batchDeleteCategories" :disabled="!selectedCategoryIds.length">批量删除</el-button>
+          <el-button size="default" @click="openCategoryDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新增分类</el-button>
+        </div>
       </div>
-      <el-table :data="categories" stripe
+      <el-table :data="categories" stripe class="category-table"
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+        @selection-change="(val) => selectedCategoryIds = val.map(v => v.id)"
       >
-        <el-table-column prop="name" label="分类名称" width="200" align="center" />
-        <el-table-column prop="icon" label="图标" width="120" align="center" />
-        <el-table-column prop="sort_order" label="排序" width="90" align="center" />
-        <el-table-column label="操作" width="160" align="center">
+        <el-table-column type="selection" width="46" align="center" />
+        <el-table-column type="index" label="序号" width="64" align="center" />
+        <el-table-column prop="name" label="分类名称" min-width="260" align="center" show-overflow-tooltip />
+        <el-table-column prop="icon" label="图标" min-width="220" align="center" show-overflow-tooltip />
+        <el-table-column prop="sort_order" label="排序" width="120" align="center" />
+        <el-table-column label="操作" width="200" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openCategoryDialog(row)">
               <el-icon style="margin-right:1px"><Edit /></el-icon>编辑
@@ -33,21 +39,21 @@
         <el-button type="primary" size="default" @click="openToolDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新增工具</el-button>
       </div>
       <el-table :data="tools" stripe style="width:100%"
-        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+        :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px' }"
       >
-        <el-table-column prop="name" label="工具名称" min-width="140" show-overflow-tooltip />
-        <el-table-column prop="category_name" label="分类" width="100" align="center" />
-        <el-table-column label="区域" width="70" align="center">
+        <el-table-column prop="name" label="工具名称" min-width="170" show-overflow-tooltip />
+        <el-table-column prop="category_name" label="分类" width="124" align="center" show-overflow-tooltip />
+        <el-table-column label="区域" width="72" align="center">
           <template #default="{ row }">{{ row.region === 'domestic' ? '国内' : '国外' }}</template>
         </el-table-column>
-        <el-table-column prop="url" label="官网链接" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="description" label="简介" min-width="180" show-overflow-tooltip />
-        <el-table-column label="免费" width="60" align="center">
+        <el-table-column prop="url" label="官网链接" min-width="190" show-overflow-tooltip />
+        <el-table-column prop="description" label="简介" min-width="260" show-overflow-tooltip />
+        <el-table-column label="免费" width="64" align="center">
           <template #default="{ row }">
             <span :class="['inline-tag', row.is_free ? 'yes' : 'no']">{{ row.is_free ? '是' : '否' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="精选" width="60" align="center">
+        <el-table-column label="精选" width="64" align="center">
           <template #default="{ row }">
             <span v-if="row.is_featured" class="inline-tag featured">是</span>
             <span v-else style="color:var(--text-tertiary)">—</span>
@@ -159,6 +165,7 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 const categories = ref([])
+const selectedCategoryIds = ref([])
 const tools = ref([])
 const toolsTotal = ref(0)
 const toolsPage = ref(1)
@@ -203,6 +210,16 @@ async function handleDeleteCategory(row) {
   try {
     await ElMessageBox.confirm(`确定删除分类"${row.name}"？`, '删除确认', { type: 'warning' })
     await deleteCategory(row.id); ElMessage.success('删除成功'); loadData()
+  } catch (e) { if (e !== 'cancel') console.error(e) }
+}
+
+async function batchDeleteCategories() {
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${selectedCategoryIds.value.length} 个分类？`, '批量删除确认', { type: 'warning' })
+    for (const id of selectedCategoryIds.value) await deleteCategory(id).catch(() => {})
+    ElMessage.success('批量删除完成')
+    selectedCategoryIds.value = []
+    loadData()
   } catch (e) { if (e !== 'cancel') console.error(e) }
 }
 
@@ -267,12 +284,16 @@ onMounted(loadData)
 <style scoped>
 .section { margin-top: 24px; }
 .table-card :deep(.el-card__body) { padding: 24px; }
+.category-table { width: 100%; }
+.category-table :deep(.el-table__cell) { text-align: center !important; }
+.category-table :deep(.cell) { text-align: center; }
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
 }
+.toolbar-actions { display: flex; align-items: center; gap: 8px; }
 .section-label {
   font-size: 15px;
   font-weight: 600;

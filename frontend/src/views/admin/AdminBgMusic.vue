@@ -1,30 +1,36 @@
 <template>
   <div class="bg-music-admin">
-    <el-card shadow="never" class="table-card">
+    <el-card shadow="never" class="table-card admin-standard-card">
       <div class="toolbar">
         <h3 class="section-label">背景音乐管理</h3>
-        <el-button type="primary" @click="openDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>添加音乐</el-button>
+        <div class="toolbar-actions">
+          <el-button @click="batchDelete" :disabled="!selectedIds.length">批量删除</el-button>
+          <el-button type="primary" @click="openDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>添加音乐</el-button>
+        </div>
       </div>
 
-      <el-table :data="list" v-loading="loading" stripe style="width:100%"
+      <el-table :data="list" v-loading="loading && !isInitial" stripe class="admin-standard-table"
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+        @selection-change="(val) => selectedIds = val.map(v => v.id)"
       >
-        <el-table-column prop="sort_order" label="排序" width="70" align="center" />
-        <el-table-column prop="title" label="曲目标题" min-width="240" show-overflow-tooltip align="center" />
-        <el-table-column prop="artist" label="艺术家" width="150" align="center" />
-        <el-table-column label="来源" width="90" align="center">
+        <el-table-column type="selection" width="46" align="center" />
+        <el-table-column type="index" label="序号" width="64" align="center" />
+        <el-table-column prop="sort_order" label="排序" width="80" align="center" />
+        <el-table-column prop="title" label="曲目标题" width="300" align="center" show-overflow-tooltip />
+        <el-table-column prop="artist" label="艺术家" width="220" align="center" show-overflow-tooltip />
+        <el-table-column label="来源" width="100" align="center">
           <template #default="{ row }">
             <span :class="['source-tag', row.source]">
               {{ row.source === 'preset' ? '预置' : '学生' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="80" align="center">
+        <el-table-column label="状态" width="100" align="center">
           <template #default="{ row }">
             <el-switch :model-value="row.is_active" size="small" @change="toggleActive(row)" />
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" align="center">
+        <el-table-column label="操作" width="210" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openDialog(row)">
               <el-icon style="margin-right:1px"><Edit /></el-icon>编辑
@@ -35,7 +41,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-empty v-if="!list.length && !loading" description="暂无背景音乐" />
+      <el-empty v-if="!isInitial && !list.length && !loading" description="暂无背景音乐" />
     </el-card>
 
     <!-- 添加/编辑对话框 -->
@@ -79,6 +85,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 const list = ref([])
 const loading = ref(false)
+const isInitial = ref(true)
+const selectedIds = ref([])
 const uploading = ref(false)
 const submitting = ref(false)
 const dialogVisible = ref(false)
@@ -103,7 +111,7 @@ async function loadList() {
     const res = await getAdminBgMusic()
     list.value = res.data || []
   } catch (e) { console.error(e) }
-  finally { loading.value = false }
+  finally { loading.value = false; isInitial.value = false }
 }
 
 function openDialog(row) {
@@ -167,12 +175,23 @@ async function handleDelete(row) {
   } catch (e) { if (e !== 'cancel') console.error(e) }
 }
 
+async function batchDelete() {
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${selectedIds.value.length} 首背景音乐？`, '批量删除确认', { type: 'warning' })
+    for (const id of selectedIds.value) await deleteBgMusic(id).catch(() => {})
+    ElMessage.success('批量删除完成')
+    selectedIds.value = []
+    await loadList()
+  } catch (e) { if (e !== 'cancel') console.error(e) }
+}
+
 onMounted(() => loadList())
 </script>
 
 <style scoped>
 .table-card :deep(.el-card__body) { padding: 24px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.toolbar-actions { display: flex; align-items: center; gap: 8px; }
 .section-label { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; }
 .file-hint { margin-left: 10px; font-size: 13px; color: var(--text-tertiary); }
 

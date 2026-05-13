@@ -1,26 +1,32 @@
 <template>
   <div class="admin-competitions">
-    <el-card shadow="never" class="table-card">
+    <el-card shadow="never" class="table-card admin-standard-card">
       <div class="toolbar">
         <h3 class="section-label">赛事管理</h3>
-        <el-button type="primary" @click="openDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新增赛事</el-button>
+        <div class="toolbar-actions">
+          <el-button @click="batchDelete" :disabled="!selectedIds.length">批量删除</el-button>
+          <el-button type="primary" @click="openDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新增赛事</el-button>
+        </div>
       </div>
 
-      <el-table :data="list" v-loading="loading" stripe style="width:100%"
+      <el-table :data="list" v-loading="loading && !isInitial" stripe class="admin-standard-table"
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
+        @selection-change="(val) => selectedIds = val.map(v => v.id)"
       >
-        <el-table-column prop="name" label="赛事名称" min-width="220" show-overflow-tooltip align="center" />
-        <el-table-column label="学年学期" width="150" align="center">
+        <el-table-column type="selection" width="46" align="center" />
+        <el-table-column type="index" label="序号" width="64" align="center" />
+        <el-table-column prop="name" label="赛事名称" width="430" align="center" show-overflow-tooltip />
+        <el-table-column label="学年学期" width="190" align="center">
           <template #default="{ row }">{{ row.academic_year }} {{ row.semester === 1 ? '上学期' : '下学期' }}</template>
         </el-table-column>
-        <el-table-column label="状态" width="90" align="center">
+        <el-table-column label="状态" width="110" align="center">
           <template #default="{ row }">
             <span :class="['status-tag', row.is_active ? 'on' : 'off']">
               {{ row.is_active ? '启用' : '禁用' }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="280" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openDialog(row)">
               <el-icon style="margin-right:1px"><Edit /></el-icon>编辑
@@ -34,7 +40,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-empty v-if="!list.length && !loading" description="暂无赛事" />
+      <el-empty v-if="!isInitial && !list.length && !loading" description="暂无赛事" />
     </el-card>
 
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑赛事' : '新增赛事'" width="440px">
@@ -70,6 +76,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 const list = ref([])
 const loading = ref(false)
+const isInitial = ref(true)
+const selectedIds = ref([])
 const saving = ref(false)
 const dialogVisible = ref(false)
 const editingId = ref(null)
@@ -95,7 +103,7 @@ async function load() {
     const res = await getAdminCompetitions()
     list.value = res.data || []
   } catch (e) { console.error(e) }
-  finally { loading.value = false }
+  finally { loading.value = false; isInitial.value = false }
 }
 
 function openDialog(row) {
@@ -145,12 +153,23 @@ async function handleDelete(row) {
   } catch (e) { if (e !== 'cancel') console.error(e) }
 }
 
+async function batchDelete() {
+  try {
+    await ElMessageBox.confirm(`确定删除选中的 ${selectedIds.value.length} 个赛事？`, '批量删除确认', { type: 'warning' })
+    for (const id of selectedIds.value) await deleteCompetition(id).catch(() => {})
+    ElMessage.success('批量删除完成')
+    selectedIds.value = []
+    load()
+  } catch (e) { if (e !== 'cancel') console.error(e) }
+}
+
 onMounted(load)
 </script>
 
 <style scoped>
 .table-card :deep(.el-card__body) { padding: 24px; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.toolbar-actions { display: flex; align-items: center; gap: 8px; }
 .section-label { font-size: 15px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; }
 .status-tag { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 10px; }
 .status-tag.on { background: rgba(52, 199, 89, 0.1); color: var(--green); }

@@ -1,18 +1,19 @@
 <template>
   <div class="admin-users">
-    <el-card shadow="never" class="table-card">
+    <el-card shadow="never" class="table-card admin-standard-card">
       <div class="toolbar">
         <h3 class="section-label">教师账号</h3>
         <el-button type="primary" @click="openDialog()"><el-icon style="margin-right:4px"><Plus /></el-icon>新建教师</el-button>
       </div>
 
-      <el-table :data="users" v-loading="loading && !isInitial" stripe style="width:100%"
+      <el-table :data="users" v-loading="loading && !isInitial" stripe class="admin-standard-table"
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
       >
-        <el-table-column prop="name" label="姓名" min-width="120" align="center" />
-        <el-table-column prop="username" label="工号" width="110" align="center" />
-        <el-table-column prop="department" label="院系" min-width="180" align="center" />
-        <el-table-column label="状态" width="80" align="center">
+        <el-table-column type="index" label="序号" width="70" align="center" />
+        <el-table-column prop="name" label="姓名" width="130" align="center" show-overflow-tooltip />
+        <el-table-column prop="username" label="工号" width="130" align="center" show-overflow-tooltip />
+        <el-table-column prop="department" label="院系" width="330" align="center" show-overflow-tooltip />
+        <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
             <span :class="['status-tag', row.status ? 'on' : 'off']">
               {{ row.status ? '启用' : '禁用' }}
@@ -22,7 +23,7 @@
         <el-table-column label="创建时间" width="130" align="center">
           <template #default="{ row }">{{ row.created_at?.slice(0, 10) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="240" fixed="right" align="center">
+        <el-table-column label="操作" width="240" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openDialog(row)">
               <el-icon style="margin-right:2px"><Edit /></el-icon>编辑

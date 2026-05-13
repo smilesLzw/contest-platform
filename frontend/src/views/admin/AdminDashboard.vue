@@ -21,17 +21,18 @@
     </div>
 
     <!-- Recent logs -->
-    <el-card shadow="never" class="table-card">
+    <el-card shadow="never" class="table-card admin-standard-card">
       <h3 class="section-title">最近操作日志</h3>
-      <el-table :data="recentLogs" v-loading="logLoading && !isInitial" stripe style="width:100%"
+      <el-table :data="recentLogs" v-loading="logLoading && !isInitial" stripe class="admin-standard-table"
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
       >
-        <el-table-column label="用户ID" prop="user_id" width="80" align="center" />
-        <el-table-column label="操作" prop="action" width="140" align="center" />
-        <el-table-column label="对象类型" prop="target_type" width="100" align="center" />
-        <el-table-column label="详情" prop="detail" min-width="240" show-overflow-tooltip align="center" />
-        <el-table-column label="时间" width="170" align="center">
-          <template #default="{ row }">{{ row.created_at }}</template>
+        <el-table-column type="index" label="序号" width="70" align="center" />
+        <el-table-column label="用户ID" prop="user_id" width="100" align="center" />
+        <el-table-column label="操作" prop="action" width="180" align="center" show-overflow-tooltip />
+        <el-table-column label="对象类型" prop="target_type" width="140" align="center" show-overflow-tooltip />
+        <el-table-column label="详情" prop="detail" width="430" align="center" show-overflow-tooltip />
+        <el-table-column label="时间" width="190" align="center">
+          <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
         </el-table-column>
       </el-table>
       <el-empty v-if="!recentLogs.length && !logLoading" description="暂无日志" />
@@ -49,6 +50,10 @@ const usersCount = ref(0)
 const recentLogs = ref([])
 const logLoading = ref(false)
 const isInitial = ref(true)
+
+function formatDateTime(value) {
+  return value ? value.replace('T', ' ').slice(0, 16) : ''
+}
 
 onMounted(async () => {
   try {

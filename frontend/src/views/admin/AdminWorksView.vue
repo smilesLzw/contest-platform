@@ -1,6 +1,6 @@
 <template>
   <div class="admin-works">
-    <el-card shadow="never" class="table-card">
+    <el-card shadow="never" class="table-card admin-standard-card">
       <!-- Toolbar -->
       <div class="toolbar">
         <div class="toolbar-left">
@@ -27,21 +27,22 @@
         :data="works"
         v-loading="loading && !isInitial"
         stripe
-        style="width:100%"
+        class="admin-standard-table"
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
         @selection-change="(val) => selectedIds = val.map(v => v.id)"
       >
-        <el-table-column type="selection" width="44" />
-        <el-table-column label="封面" width="64" align="center">
+        <el-table-column type="selection" width="46" align="center" />
+        <el-table-column type="index" label="序号" width="64" align="center" />
+        <el-table-column label="封面" width="72" align="center">
           <template #default="{ row }">
             <el-image :src="row.cover_url || ''" style="width:40px;height:28px;border-radius:4px" fit="cover">
               <template #error><div class="img-ph">—</div></template>
             </el-image>
           </template>
         </el-table-column>
-        <el-table-column prop="title" label="作品名" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="major_name" label="专业" width="110" align="center" />
-        <el-table-column label="学年学期" width="130" align="center">
+        <el-table-column prop="title" label="作品名" width="250" align="center" show-overflow-tooltip />
+        <el-table-column prop="major_name" label="专业" width="140" align="center" show-overflow-tooltip />
+        <el-table-column label="学年学期" width="140" align="center">
           <template #default="{ row }">{{ row.academic_year }} {{ row.semester === 1 ? '上' : '下' }}</template>
         </el-table-column>
         <el-table-column label="状态" width="90" align="center">
@@ -51,8 +52,8 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="publisher_name" label="发布者" width="90" align="center" />
-        <el-table-column label="操作" width="240" fixed="right" align="center">
+        <el-table-column prop="publisher_name" label="发布者" width="100" align="center" show-overflow-tooltip />
+        <el-table-column label="操作" width="218" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="$router.push(`/admin/works/${row.id}/edit`)">
               <el-icon style="margin-right:1px"><Edit /></el-icon>编辑

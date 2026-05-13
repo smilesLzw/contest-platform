@@ -1,21 +1,22 @@
 <template>
   <div class="admin-logs">
-    <el-card shadow="never" class="table-card">
+    <el-card shadow="never" class="table-card admin-standard-card">
       <div class="toolbar">
         <h3 class="section-label">操作日志</h3>
       </div>
 
-      <el-table :data="logs" v-loading="loading && !isInitial" stripe style="width:100%"
+      <el-table :data="logs" v-loading="loading && !isInitial" stripe class="admin-standard-table"
         :header-cell-style="{ background:'var(--bg-secondary)', color:'var(--text-secondary)', fontWeight:600, fontSize:'12px', textAlign:'center' }"
       >
-        <el-table-column label="ID" prop="id" width="70" align="center" />
-        <el-table-column label="用户ID" prop="user_id" width="80" align="center" />
-        <el-table-column label="操作" prop="action" width="150" align="center" />
-        <el-table-column label="对象类型" prop="target_type" width="100" align="center" />
-        <el-table-column label="对象ID" prop="target_id" width="80" align="center" />
-        <el-table-column label="详情" prop="detail" min-width="280" show-overflow-tooltip align="center" />
-        <el-table-column label="时间" width="170" align="center">
-          <template #default="{ row }">{{ row.created_at }}</template>
+        <el-table-column type="index" label="序号" width="70" align="center" />
+        <el-table-column label="ID" prop="id" width="80" align="center" />
+        <el-table-column label="用户ID" prop="user_id" width="90" align="center" />
+        <el-table-column label="操作" prop="action" width="170" align="center" show-overflow-tooltip />
+        <el-table-column label="对象类型" prop="target_type" width="130" align="center" show-overflow-tooltip />
+        <el-table-column label="对象ID" prop="target_id" width="90" align="center" />
+        <el-table-column label="详情" prop="detail" width="360" align="center" show-overflow-tooltip />
+        <el-table-column label="时间" width="190" align="center">
+          <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
         </el-table-column>
       </el-table>
       <el-empty v-if="!logs.length && !loading" description="暂无日志" />
@@ -46,6 +47,10 @@ const page = ref(1)
 const pageSize = ref(20)
 const loading = ref(false)
 const isInitial = ref(true)
+
+function formatDateTime(value) {
+  return value ? value.replace('T', ' ').slice(0, 16) : ''
+}
 
 async function loadLogs() {
   loading.value = true
