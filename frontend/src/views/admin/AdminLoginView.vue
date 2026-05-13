@@ -46,11 +46,6 @@ async function handleLogin() {
   loading.value = true
   try {
     await authStore.login(form)
-    if (authStore.userInfo?.role !== 'admin') {
-      ElMessage.error('仅限管理员登录')
-      authStore.logout()
-      return
-    }
     ElMessage.success('登录成功')
     router.push('/admin')
   } catch (e) {
