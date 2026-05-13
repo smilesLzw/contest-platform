@@ -140,10 +140,12 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     works_count = await db.scalar(select(func.count(Work.id)).where(Work.status == "published")) or 0
     news_count = await db.scalar(select(func.count(News.id)).where(News.status == "published")) or 0
     tools_count = await db.scalar(select(func.count(AiTool.id))) or 0
+    teachers_count = await db.scalar(select(func.count(User.id)).where(User.role == "teacher")) or 0
     return ApiResponse(data={
         "works_count": works_count,
         "news_count": news_count,
         "tools_count": tools_count,
+        "teachers_count": teachers_count,
     })
 
 

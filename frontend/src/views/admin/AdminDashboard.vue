@@ -15,7 +15,7 @@
         <span class="stat-label">AI 工具数</span>
       </div>
       <div class="stat-card">
-        <span class="stat-num" style="color: var(--red)">{{ usersCount ?? '-' }}</span>
+        <span class="stat-num" style="color: var(--red)">{{ stats.teachers_count ?? '-' }}</span>
         <span class="stat-label">教师账号数</span>
       </div>
     </div>
@@ -43,10 +43,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getStats, getLogs } from '../../api/common'
-import { getUsers } from '../../api/users'
 
 const stats = ref({})
-const usersCount = ref(0)
 const recentLogs = ref([])
 const logLoading = ref(false)
 const isInitial = ref(true)
@@ -57,12 +55,8 @@ function formatDateTime(value) {
 
 onMounted(async () => {
   try {
-    const [statsRes, usersRes] = await Promise.all([
-      getStats().catch(() => ({ data: {} })),
-      getUsers({ page: 1, page_size: 1 }).catch(() => ({ data: { total: 0 } })),
-    ])
+    const statsRes = await getStats()
     stats.value = statsRes.data || {}
-    usersCount.value = usersRes.data?.total || 0
 
     logLoading.value = true
     const logRes = await getLogs({ page: 1, page_size: 10 })

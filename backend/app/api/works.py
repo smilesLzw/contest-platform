@@ -71,8 +71,8 @@ async def list_works(
     query = select(Work).options(joinedload(Work.major), joinedload(Work.publisher))
 
     if status:
-        if current_user is None or current_user.role != "admin":
-            raise HTTPException(status_code=403, detail="需要管理员权限")
+        if current_user is None or current_user.role not in ("admin", "teacher"):
+            raise HTTPException(status_code=403, detail="需要登录后查看")
         query = query.where(Work.status == status)
     else:
         query = query.where(Work.status == "published")
