@@ -1,5 +1,12 @@
 import request from '../utils/request'
 
+const UPLOAD_TIMEOUTS = {
+  image: 120000,
+  file: 600000,
+  audio: 600000,
+  video: 1800000,
+}
+
 export function getMajors() {
   return request.get('/majors')
 }
@@ -23,28 +30,28 @@ export function uploadImage(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
   appendUploadMeta(formData, meta)
-  return request.post('/upload/image', formData)
+  return request.post('/upload/image', formData, { timeout: UPLOAD_TIMEOUTS.image })
 }
 
 export function uploadFile(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
   appendUploadMeta(formData, meta)
-  return request.post('/upload/file', formData)
+  return request.post('/upload/file', formData, { timeout: UPLOAD_TIMEOUTS.file })
 }
 
 export function uploadAudio(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
   appendUploadMeta(formData, meta)
-  return request.post('/upload/audio', formData)
+  return request.post('/upload/audio', formData, { timeout: UPLOAD_TIMEOUTS.audio })
 }
 
 export function uploadVideo(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
   appendUploadMeta(formData, meta)
-  return request.post('/upload/video', formData)
+  return request.post('/upload/video', formData, { timeout: UPLOAD_TIMEOUTS.video })
 }
 
 export function getBgMusic() {

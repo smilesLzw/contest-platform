@@ -3,6 +3,7 @@ import os
 import re
 import uuid
 from datetime import datetime
+import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +17,7 @@ from app.core.config import (
 from app.schemas.common import ApiResponse
 
 router = APIRouter(prefix="/upload", tags=["文件上传"])
+UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 def _generate_filename(original_name: str) -> str:
@@ -56,6 +58,26 @@ def _work_filename(
     return f"{prefix}{safe_suffix}{_extension(original_name or default_name, default_ext)}"
 
 
+async def _save_upload(file: UploadFile, save_path: str, max_size: int, size_message: str) -> None:
+    """分块写入上传文件，避免大文件一次性读入内存。"""
+    tmp_path = f"{save_path}.{uuid.uuid4().hex}.tmp"
+    total = 0
+    try:
+        async with aiofiles.open(tmp_path, "wb") as f:
+            while True:
+                chunk = await file.read(UPLOAD_CHUNK_SIZE)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > max_size:
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=size_message)
+                await f.write(chunk)
+        os.replace(tmp_path, save_path)
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+
 @router.post("/image", response_model=ApiResponse)
 async def upload_image(
     file: UploadFile = File(...),
@@ -66,23 +88,16 @@ async def upload_image(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """上传图片（封面图、Logo等），最大5MB"""
+    """上传图片（封面图、Logo等），最大10MB"""
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"不支持的图片格式，仅支持 JPG/PNG/WebP")
-
-    content = await file.read()
-    if len(content) > MAX_IMAGE_SIZE:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="图片大小不能超过5MB")
 
     filename = _work_filename(file.filename or "image.png", "image.png", ".png", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "images")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
-
-    with open(save_path, "wb") as f:
-        f.write(content)
+    await _save_upload(file, save_path, MAX_IMAGE_SIZE, "图片大小不能超过10MB")
 
     url = f"/uploads/images/{filename}"
     return ApiResponse(data={"url": url})
@@ -99,22 +114,15 @@ async def upload_file(
     current_user: User = Depends(require_teacher_or_admin),
 ):
     """上传附件（PDF/ZIP，最大50MB）"""
-    if file.content_type not in ALLOWED_FILE_TYPES and not file.filename.endswith((".pdf", ".zip")):
+    if file.content_type not in ALLOWED_FILE_TYPES and not (file.filename or "").endswith((".pdf", ".zip")):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"不支持的文件类型，仅支持 PDF/ZIP")
-
-    content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="文件大小不能超过50MB")
 
     filename = _work_filename(file.filename or "file.zip", "file.zip", ".zip", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "files")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
-
-    with open(save_path, "wb") as f:
-        f.write(content)
+    await _save_upload(file, save_path, MAX_FILE_SIZE, "文件大小不能超过50MB")
 
     url = f"/uploads/files/{filename}"
     return ApiResponse(data={"url": url})
@@ -135,18 +143,11 @@ async def upload_audio(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"不支持的音频格式，仅支持 MP3/WAV/OGG/AAC/FLAC")
 
-    content = await file.read()
-    if len(content) > MAX_AUDIO_SIZE:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="音频大小不能超过100MB")
-
     filename = _work_filename(file.filename or "audio.mp3", "audio.mp3", ".mp3", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "audio")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
-
-    with open(save_path, "wb") as f:
-        f.write(content)
+    await _save_upload(file, save_path, MAX_AUDIO_SIZE, "音频大小不能超过100MB")
 
     url = f"/uploads/audio/{filename}"
     return ApiResponse(data={"url": url})
@@ -167,18 +168,11 @@ async def upload_video(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"不支持的视频格式，仅支持 MP4/WebM/MOV")
 
-    content = await file.read()
-    if len(content) > MAX_VIDEO_SIZE:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="视频大小不能超过1GB")
-
     filename = _work_filename(file.filename or "video.mp4", "video.mp4", ".mp4", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "videos")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
-
-    with open(save_path, "wb") as f:
-        f.write(content)
+    await _save_upload(file, save_path, MAX_VIDEO_SIZE, "视频大小不能超过1GB")
 
     url = f"/uploads/videos/{filename}"
     return ApiResponse(data={"url": url})
