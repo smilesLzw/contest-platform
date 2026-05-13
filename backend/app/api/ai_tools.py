@@ -4,19 +4,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, asc, func
 from sqlalchemy.orm import joinedload
-from fastapi.security import HTTPAuthorizationCredentials
 
 from app.database import get_db
 from app.models.ai_tool import AiTool
 from app.models.ai_category import AiCategory
 from app.models.user import User
-from app.core.deps import get_optional_user, require_admin
+from app.core.deps import require_teacher_or_admin
 from app.schemas.ai_tool import (
     AiCategoryCreate, AiCategoryUpdate, AiCategoryResponse,
     AiToolCreate, AiToolUpdate, AiToolResponse,
 )
 from app.schemas.common import ApiResponse, PageData
-from app.crud.log import create_log
+from app.crud.log import create_log, model_snapshot
 
 router = APIRouter(prefix="/ai-tools", tags=["AI工具"])
 
@@ -35,7 +34,7 @@ async def list_categories(db: AsyncSession = Depends(get_db)):
 async def create_category(
     req: AiCategoryCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     """新建分类"""
     cat = AiCategory(name=req.name, icon=req.icon, sort_order=req.sort_order)
@@ -50,7 +49,7 @@ async def update_category(
     cat_id: int,
     req: AiCategoryUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     """编辑分类"""
     result = await db.execute(select(AiCategory).where(AiCategory.id == cat_id))
@@ -69,15 +68,18 @@ async def update_category(
 async def delete_category(
     cat_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_teacher_or_admin),
 ):
     """删除分类"""
     result = await db.execute(select(AiCategory).where(AiCategory.id == cat_id))
     cat = result.scalar_one_or_none()
     if not cat:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="分类不存在")
+    snapshot = model_snapshot(cat)
+    name = cat.name
     await db.delete(cat)
     await db.commit()
+    await create_log(db, current_user.id, "delete_ai_category", "ai_category", cat_id, f"删除AI分类: {name}", snapshot, True)
     return ApiResponse(message="删除成功")
 
 
@@ -139,7 +141,7 @@ async def list_tools(
 async def create_tool(
     req: AiToolCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_teacher_or_admin),
 ):
     """新建工具"""
     tool = AiTool(**req.model_dump())
@@ -155,7 +157,7 @@ async def update_tool(
     tool_id: int,
     req: AiToolUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_teacher_or_admin),
 ):
     """编辑工具"""
     result = await db.execute(
@@ -175,14 +177,16 @@ async def update_tool(
 async def delete_tool(
     tool_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_teacher_or_admin),
 ):
     """删除工具"""
     result = await db.execute(select(AiTool).where(AiTool.id == tool_id))
     tool = result.scalar_one_or_none()
     if not tool:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工具不存在")
+    snapshot = model_snapshot(tool)
+    name = tool.name
     await db.delete(tool)
     await db.commit()
-    await create_log(db, current_user.id, "delete_ai_tool", "ai_tool", tool_id, f"删除AI工具: {tool.name}")
+    await create_log(db, current_user.id, "delete_ai_tool", "ai_tool", tool_id, f"删除AI工具: {name}", snapshot, True)
     return ApiResponse(message="删除成功")

@@ -8,10 +8,10 @@ from sqlalchemy.orm import joinedload
 from app.database import get_db
 from app.models.work import Work
 from app.models.user import User
-from app.core.deps import get_optional_user, require_teacher_or_admin, require_admin
+from app.core.deps import get_optional_user, require_teacher_or_admin
 from app.schemas.work import WorkCreate, WorkUpdate, WorkResponse
 from app.schemas.common import ApiResponse, PageData
-from app.crud.log import create_log
+from app.crud.log import create_log, model_snapshot
 
 router = APIRouter(prefix="/works", tags=["作品"])
 
@@ -155,7 +155,7 @@ async def admin_list_works(
     academic_year: str | None = None,
     keyword: str | None = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     """管理员查看所有作品（含草稿）"""
     query = (
@@ -207,7 +207,7 @@ async def get_work(
 
     can_view_private = (
         current_user is not None
-        and (current_user.role == "admin" or work.publisher_id == current_user.id)
+        and (current_user.role in ("admin", "teacher") or work.publisher_id == current_user.id)
     )
     if work.status != "published" and not can_view_private:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="作品不存在")
@@ -273,9 +273,6 @@ async def update_work(
     work = result.unique().scalar_one_or_none()
     if not work:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="作品不存在")
-    if current_user.role != "admin" and work.publisher_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只能编辑自己的作品")
-
     old_status = work.status
     for field, value in req.model_dump(exclude_unset=True).items():
         setattr(work, field, value)
@@ -297,14 +294,11 @@ async def delete_work(
     work = result.scalar_one_or_none()
     if not work:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="作品不存在")
-    if current_user.role != "admin":
-        if work.publisher_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只能删除自己的作品")
-        if work.status != "draft":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="仅可删除草稿状态的作品")
+    snapshot = model_snapshot(work)
+    title = work.title
     await db.delete(work)
     await db.commit()
-    await create_log(db, current_user.id, "delete_work", "work", work_id, f"删除作品: {work.title}")
+    await create_log(db, current_user.id, "delete_work", "work", work_id, f"删除作品: {title}", snapshot, True)
     return ApiResponse(message="删除成功")
 
 
@@ -321,8 +315,6 @@ async def publish_work(
     work = result.unique().scalar_one_or_none()
     if not work:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="作品不存在")
-    if current_user.role != "admin" and work.publisher_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="权限不足")
     work.status = "published"
     work.published_at = func.now()
     await db.commit()
@@ -335,9 +327,9 @@ async def publish_work(
 async def archive_work(
     work_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_teacher_or_admin),
 ):
-    """下架作品（管理员）"""
+    """下架作品"""
     result = await db.execute(
         select(Work).options(joinedload(Work.major), joinedload(Work.publisher)).where(Work.id == work_id)
     )

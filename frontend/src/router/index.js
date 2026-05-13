@@ -27,11 +27,11 @@ const routes = [
   // 管理后台登录（独立页面，不嵌套在任何布局内）
   { path: '/admin/login', name: 'AdminLogin', component: () => import('../views/admin/AdminLoginView.vue') },
 
-  // 管理后台（需管理员）
+  // 管理后台（教师和管理员可进入，部分页面仅管理员）
   {
     path: '/admin',
     component: () => import('../views/admin/AdminLayout.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true },
+    meta: { requiresAuth: true },
     children: [
       { path: '', name: 'AdminDashboard', component: () => import('../views/admin/AdminDashboard.vue') },
       { path: 'works', name: 'AdminWorks', component: () => import('../views/admin/AdminWorksView.vue') },
@@ -41,12 +41,12 @@ const routes = [
       { path: 'news/create', name: 'AdminNewsCreate', component: () => import('../views/teacher/NewsFormView.vue') },
       { path: 'news/:id/edit', name: 'AdminNewsEdit', component: () => import('../views/teacher/NewsFormView.vue') },
       { path: 'ai-tools', name: 'AdminAiTools', component: () => import('../views/admin/AdminAiToolsView.vue') },
-      { path: 'users', name: 'AdminUsers', component: () => import('../views/admin/AdminUsersView.vue') },
+      { path: 'users', name: 'AdminUsers', component: () => import('../views/admin/AdminUsersView.vue'), meta: { requiresAdmin: true } },
       { path: 'profile', name: 'AdminProfile', component: () => import('../views/teacher/ProfileView.vue') },
       { path: 'bg-music', name: 'AdminBgMusic', component: () => import('../views/admin/AdminBgMusic.vue') },
       { path: 'logs', name: 'AdminLogs', component: () => import('../views/admin/AdminLogsView.vue') },
       { path: 'majors', name: 'AdminMajors', component: () => import('../views/admin/AdminMajorsView.vue') },
-      { path: 'competitions', name: 'AdminCompetitions', component: () => import('../views/admin/AdminCompetitionsView.vue') },
+      { path: 'competitions', name: 'AdminCompetitions', component: () => import('../views/admin/AdminCompetitionsView.vue'), meta: { requiresAdmin: true } },
     ],
   },
 ]

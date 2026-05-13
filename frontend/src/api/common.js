@@ -19,6 +19,10 @@ export function getLogs(params) {
   return request.get('/logs', { params })
 }
 
+export function undoLog(id) {
+  return request.post(`/logs/${id}/undo`)
+}
+
 function appendUploadMeta(formData, meta = {}) {
   if (meta.title) formData.append('title', meta.title)
   if (meta.academic_year) formData.append('academic_year', meta.academic_year)

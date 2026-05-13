@@ -1,14 +1,17 @@
 """FastAPI 应用入口"""
+import json
 import math
+from datetime import datetime
 from fastapi import FastAPI, Depends, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, DateTime as SqlDateTime, Boolean as SqlBoolean
 
 from app.database import get_db, engine, Base
 from app.models import User, Work, News, AiTool, OperationLog, Major, AiCategory
-from app.core.deps import get_current_user, require_admin
+from app.models.bg_music import BackgroundMusic
+from app.core.deps import get_current_user, require_admin, require_teacher_or_admin
 from app.schemas.common import ApiResponse, PageData
 from app.api import auth, works, news, ai_tools, users, upload, bg_music, competitions
 
@@ -65,7 +68,7 @@ async def list_majors(db: AsyncSession = Depends(get_db)):
 # ---------- 专业管理（管理员） ----------
 
 @app.get("/api/v1/admin/majors", response_model=ApiResponse[list[dict]])
-async def admin_list_majors(db: AsyncSession = Depends(get_db), _: User = Depends(require_admin)):
+async def admin_list_majors(db: AsyncSession = Depends(get_db), _: User = Depends(require_teacher_or_admin)):
     result = await db.execute(select(Major).order_by(Major.sort_order, Major.id))
     majors_list = result.scalars().all()
     return ApiResponse(data=[{
@@ -78,7 +81,7 @@ async def admin_list_majors(db: AsyncSession = Depends(get_db), _: User = Depend
 async def admin_create_major(
     data: dict,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     major = Major(
         grade=data.get("grade", ""),
@@ -97,7 +100,7 @@ async def admin_update_major(
     major_id: int,
     data: dict,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     result = await db.execute(select(Major).where(Major.id == major_id))
     major = result.scalar_one_or_none()
@@ -115,14 +118,17 @@ async def admin_update_major(
 async def admin_delete_major(
     major_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_user: User = Depends(require_teacher_or_admin),
 ):
     result = await db.execute(select(Major).where(Major.id == major_id))
     major = result.scalar_one_or_none()
     if not major:
         raise HTTPException(status_code=404, detail="专业不存在")
+    from app.crud.log import create_log, model_snapshot
+    snapshot = model_snapshot(major)
     await db.delete(major)
     await db.commit()
+    await create_log(db, current_user.id, "delete_major", "major", major_id, f"删除专业: {major.name}", snapshot, True)
     return ApiResponse(message="删除成功")
 
 
@@ -146,7 +152,7 @@ async def list_logs(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     """操作日志列表"""
     query = select(OperationLog).order_by(OperationLog.created_at.desc())
@@ -168,6 +174,9 @@ async def list_logs(
                 "target_type": log.target_type,
                 "target_id": log.target_id,
                 "detail": log.detail,
+                "is_undoable": log.is_undoable,
+                "undone_at": log.undone_at.isoformat() if log.undone_at else None,
+                "undone_by": log.undone_by,
                 "created_at": log.created_at.isoformat() if log.created_at else None,
             }
             for log in logs
@@ -177,3 +186,69 @@ async def list_logs(
         page_size=page_size,
         pages=math.ceil(total / page_size) if page_size > 0 else 0,
     ))
+
+
+UNDO_MODELS = {
+    "work": Work,
+    "news": News,
+    "ai_tool": AiTool,
+    "ai_category": AiCategory,
+    "bg_music": BackgroundMusic,
+    "major": Major,
+}
+
+
+def _restore_value(column, value):
+    if value is None:
+        return None
+    if isinstance(column.type, SqlDateTime):
+        return datetime.fromisoformat(value) if isinstance(value, str) else value
+    if isinstance(column.type, SqlBoolean):
+        return bool(value)
+    return value
+
+
+@app.post("/api/v1/logs/{log_id}/undo", response_model=ApiResponse)
+async def undo_log(
+    log_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """超级管理员撤销可恢复的删除操作。"""
+    result = await db.execute(select(OperationLog).where(OperationLog.id == log_id))
+    log = result.scalar_one_or_none()
+    if not log:
+        raise HTTPException(status_code=404, detail="日志不存在")
+    if not log.is_undoable or not log.undo_data:
+        raise HTTPException(status_code=400, detail="该操作不可撤销")
+    if log.undone_at is not None:
+        raise HTTPException(status_code=400, detail="该操作已撤销")
+
+    model = UNDO_MODELS.get(log.target_type or "")
+    if model is None:
+        raise HTTPException(status_code=400, detail="暂不支持撤销该类型")
+
+    data = json.loads(log.undo_data)
+    existing = await db.get(model, data.get("id"))
+    if existing:
+        raise HTTPException(status_code=400, detail="目标记录已存在，无法重复恢复")
+
+    columns = {column.name: column for column in model.__table__.columns}
+    restored = model(**{
+        key: _restore_value(columns[key], value)
+        for key, value in data.items()
+        if key in columns
+    })
+    db.add(restored)
+    log.undone_at = datetime.now()
+    log.undone_by = current_user.id
+    log.is_undoable = 0
+    db.add(OperationLog(
+        user_id=current_user.id,
+        action="undo_delete",
+        target_type=log.target_type,
+        target_id=log.target_id,
+        detail=f"撤销操作日志 #{log.id}: {log.detail}",
+    ))
+    await db.commit()
+    return ApiResponse(message="撤销成功")

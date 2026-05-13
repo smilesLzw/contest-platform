@@ -1,4 +1,4 @@
-"""专业管理接口（管理员）"""
+"""专业管理接口"""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.database import get_db
 from app.models.major import Major
 from app.models.user import User
-from app.core.deps import require_admin
+from app.core.deps import require_teacher_or_admin
 from app.schemas.major import MajorCreate, MajorUpdate, MajorResponse
 from app.schemas.common import ApiResponse
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/admin/majors", tags=["专业管理"])
 
 
 @router.get("/", response_model=ApiResponse[list[MajorResponse]])
-async def list_majors(db: AsyncSession = Depends(get_db), _: User = Depends(require_admin)):
+async def list_majors(db: AsyncSession = Depends(get_db), _: User = Depends(require_teacher_or_admin)):
     result = await db.execute(select(Major).order_by(Major.sort_order, Major.id))
     majors = result.scalars().all()
     return ApiResponse(data=[MajorResponse.model_validate(m) for m in majors])
@@ -24,7 +24,7 @@ async def list_majors(db: AsyncSession = Depends(get_db), _: User = Depends(requ
 async def create_major(
     req: MajorCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     major = Major(name=req.name, sort_order=0)
     db.add(major)
@@ -38,7 +38,7 @@ async def update_major(
     major_id: int,
     req: MajorUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     result = await db.execute(select(Major).where(Major.id == major_id))
     major = result.scalar_one_or_none()
@@ -55,7 +55,7 @@ async def update_major(
 async def delete_major(
     major_id: int,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     result = await db.execute(select(Major).where(Major.id == major_id))
     major = result.scalar_one_or_none()

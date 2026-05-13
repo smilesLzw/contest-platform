@@ -50,18 +50,20 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const navItems = [
+const allNavItems = [
   { path: '/admin', label: '仪表盘', icon: DataAnalysis },
   { path: '/admin/works', label: '作品管理', icon: Collection },
   { path: '/admin/news', label: '新闻管理', icon: Reading },
   { path: '/admin/ai-tools', label: 'AI 工具管理', icon: Tools },
-  { path: '/admin/users', label: '用户管理', icon: User },
+  { path: '/admin/users', label: '用户管理', icon: User, adminOnly: true },
   { path: '/admin/profile', label: '个人资料', icon: UserFilled },
   { path: '/admin/bg-music', label: '背景音乐', icon: Headset },
   { path: '/admin/logs', label: '操作日志', icon: Document },
   { path: '/admin/majors', label: '专业管理', icon: School },
-  { path: '/admin/competitions', label: '赛事管理', icon: Trophy },
+  { path: '/admin/competitions', label: '赛事管理', icon: Trophy, adminOnly: true },
 ]
+
+const navItems = computed(() => allNavItems.filter(item => !item.adminOnly || authStore.isAdmin))
 
 function isActive(path) {
   if (path === '/admin') return route.path === '/admin'

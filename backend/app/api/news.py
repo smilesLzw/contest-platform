@@ -8,10 +8,10 @@ from sqlalchemy.orm import joinedload
 from app.database import get_db
 from app.models.news import News
 from app.models.user import User
-from app.core.deps import get_optional_user, require_teacher_or_admin, require_admin
+from app.core.deps import get_optional_user, require_teacher_or_admin
 from app.schemas.news import NewsCreate, NewsUpdate, NewsResponse
 from app.schemas.common import ApiResponse, PageData
-from app.crud.log import create_log
+from app.crud.log import create_log, model_snapshot
 
 router = APIRouter(prefix="/news", tags=["新闻"])
 
@@ -113,7 +113,7 @@ async def admin_list_news(
     category: str | None = None,
     keyword: str | None = None,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_teacher_or_admin),
 ):
     """管理员查看所有新闻（含草稿）"""
     query = select(News).options(joinedload(News.author))
@@ -160,7 +160,7 @@ async def get_news(
 
     can_view_private = (
         current_user is not None
-        and (current_user.role == "admin" or news.author_id == current_user.id)
+        and (current_user.role in ("admin", "teacher") or news.author_id == current_user.id)
     )
     if news.status != "published" and not can_view_private:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="新闻不存在")
@@ -204,9 +204,6 @@ async def update_news(
     news = result.unique().scalar_one_or_none()
     if not news:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="新闻不存在")
-    if current_user.role != "admin" and news.author_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只能编辑自己的新闻")
-
     old_status = news.status
     for field, value in req.model_dump(exclude_unset=True).items():
         setattr(news, field, value)
@@ -228,14 +225,11 @@ async def delete_news(
     news = result.scalar_one_or_none()
     if not news:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="新闻不存在")
-    if current_user.role != "admin":
-        if news.author_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="只能删除自己的新闻")
-        if news.status != "draft":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="仅可删除草稿状态")
+    snapshot = model_snapshot(news)
+    title = news.title
     await db.delete(news)
     await db.commit()
-    await create_log(db, current_user.id, "delete_news", "news", news_id, f"删除新闻: {news.title}")
+    await create_log(db, current_user.id, "delete_news", "news", news_id, f"删除新闻: {title}", snapshot, True)
     return ApiResponse(message="删除成功")
 
 
@@ -252,8 +246,6 @@ async def publish_news(
     news = result.unique().scalar_one_or_none()
     if not news:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="新闻不存在")
-    if current_user.role != "admin" and news.author_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="权限不足")
     news.status = "published"
     news.published_at = func.now()
     await db.commit()
@@ -266,7 +258,7 @@ async def publish_news(
 async def toggle_top_news(
     news_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_teacher_or_admin),
 ):
     """置顶/取消置顶"""
     result = await db.execute(
