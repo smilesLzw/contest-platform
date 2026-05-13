@@ -50,7 +50,7 @@
       <el-table :data="works" v-if="works.length">
         <el-table-column label="封面" width="100">
           <template #default="{ row }">
-            <el-image :src="row.cover_url || ''" style="width:60px;height:40px" fit="cover">
+            <el-image :src="row.cover_thumb_url || row.cover_card_url || row.cover_url || ''" style="width:60px;height:40px" fit="cover">
               <template #error><div class="img-fb">&mdash;</div></template>
             </el-image>
           </template>

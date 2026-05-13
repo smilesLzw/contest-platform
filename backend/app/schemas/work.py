@@ -15,6 +15,11 @@ class WorkCreate(BaseModel):
     award: str | None = None
     work_type: str | None = None
     cover_url: str | None = None
+    cover_original_url: str | None = None
+    cover_card_url: str | None = None
+    cover_detail_url: str | None = None
+    cover_thumb_url: str | None = None
+    cover_crop_data: str | None = None
     content: str | None = None
     demo_url: str | None = None
     attachment_url: str | None = None
@@ -43,6 +48,11 @@ class WorkResponse(BaseModel):
     award: str | None = None
     work_type: str | None = None
     cover_url: str | None = None
+    cover_original_url: str | None = None
+    cover_card_url: str | None = None
+    cover_detail_url: str | None = None
+    cover_thumb_url: str | None = None
+    cover_crop_data: str | None = None
     content: str | None = None
     demo_url: str | None = None
     attachment_url: str | None = None

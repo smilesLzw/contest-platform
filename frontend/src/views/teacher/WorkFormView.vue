@@ -87,14 +87,26 @@
         </el-row>
 
         <el-form-item label="封面图" prop="cover_url">
-          <el-upload
-            :show-file-list="false"
-            :http-request="handleCoverUpload"
-            accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
-          >
-            <el-image v-if="form.cover_url" :src="form.cover_url" style="width: 200px; height: 120px" fit="cover" />
-            <el-button v-else>上传封面</el-button>
-          </el-upload>
+          <div class="cover-field">
+            <el-upload
+              :show-file-list="false"
+              :http-request="handleCoverUpload"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+            >
+              <el-image v-if="coverPreviewUrl" :src="coverPreviewUrl" class="cover-upload-preview" fit="cover" />
+              <el-button v-else>上传封面</el-button>
+            </el-upload>
+            <div class="cover-actions" v-if="coverPreviewUrl">
+              <el-upload
+                :show-file-list="false"
+                :http-request="handleCoverUpload"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
+              >
+                <el-button>重新上传并裁剪</el-button>
+              </el-upload>
+              <span class="cover-tip">列表、详情和缩略图会使用不同尺寸版本。</span>
+            </div>
+          </div>
         </el-form-item>
 
         <!-- 制图：多图上传 -->
@@ -180,6 +192,60 @@
         </el-form-item>
       </el-form>
     </el-card>
+
+    <el-dialog
+      v-model="coverCrop.visible"
+      title="调整封面展示区域"
+      width="860px"
+      destroy-on-close
+      :close-on-click-modal="false"
+    >
+      <div class="crop-dialog">
+        <div class="crop-main">
+          <div class="crop-preview crop-preview-main">
+            <img :src="coverCrop.previewUrl" :style="cropImageStyle" alt="" />
+          </div>
+          <div class="crop-controls">
+            <div class="crop-control">
+              <span>横向位置</span>
+              <el-slider v-model="coverCrop.focalX" :min="0" :max="100" />
+            </div>
+            <div class="crop-control">
+              <span>纵向位置</span>
+              <el-slider v-model="coverCrop.focalY" :min="0" :max="100" />
+            </div>
+            <div class="crop-control">
+              <span>放大裁剪</span>
+              <el-slider v-model="coverCrop.zoom" :min="1" :max="2.5" :step="0.05" />
+            </div>
+          </div>
+        </div>
+        <div class="crop-side">
+          <div>
+            <div class="preview-label">列表卡片</div>
+            <div class="crop-preview preview-card">
+              <img :src="coverCrop.previewUrl" :style="cropImageStyle" alt="" />
+            </div>
+          </div>
+          <div>
+            <div class="preview-label">详情大图</div>
+            <div class="crop-preview preview-detail">
+              <img :src="coverCrop.previewUrl" :style="cropImageStyle" alt="" />
+            </div>
+          </div>
+          <div>
+            <div class="preview-label">缩略图</div>
+            <div class="crop-preview preview-thumb">
+              <img :src="coverCrop.previewUrl" :style="cropImageStyle" alt="" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="cancelCoverCrop">取消</el-button>
+        <el-button type="primary" :loading="coverUploading" @click="confirmCoverCrop">确认裁剪并上传</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -208,6 +274,7 @@ let themeObserver = null
 const formRef = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
+const coverUploading = ref(false)
 const majors = ref([])
 const teachers = ref([])
 const competitions = ref([])
@@ -224,6 +291,11 @@ const form = reactive({
   award: '',
   work_type: '',
   cover_url: '',
+  cover_original_url: '',
+  cover_card_url: '',
+  cover_detail_url: '',
+  cover_thumb_url: '',
+  cover_crop_data: '',
   content: '',
   demo_url: '',
   attachment_url: '',
@@ -236,6 +308,26 @@ const galleryList = computed(() => {
   if (!form.gallery_urls) return []
   try { return JSON.parse(form.gallery_urls) } catch { return [] }
 })
+
+const coverPreviewUrl = computed(() => form.cover_card_url || form.cover_url)
+
+const coverCrop = reactive({
+  visible: false,
+  file: null,
+  previewUrl: '',
+  image: null,
+  naturalWidth: 0,
+  naturalHeight: 0,
+  focalX: 50,
+  focalY: 50,
+  zoom: 1,
+})
+
+const cropImageStyle = computed(() => ({
+  objectPosition: `${coverCrop.focalX}% ${coverCrop.focalY}%`,
+  transform: `scale(${coverCrop.zoom})`,
+  transformOrigin: `${coverCrop.focalX}% ${coverCrop.focalY}%`,
+}))
 
 const rules = {
   title: [{ required: true, message: '请输入作品名称', trigger: 'blur' }],
@@ -255,11 +347,124 @@ for (let i = 0; i < 5; i++) {
 }
 
 async function handleCoverUpload({ file }) {
+  if (coverCrop.previewUrl) URL.revokeObjectURL(coverCrop.previewUrl)
+  const previewUrl = URL.createObjectURL(file)
+  coverCrop.file = file
+  coverCrop.previewUrl = previewUrl
+  coverCrop.focalX = 50
+  coverCrop.focalY = 50
+  coverCrop.zoom = 1
+
   try {
-    const res = await uploadImage(file)
-    form.cover_url = res.data.url
-    ElMessage.success('封面上传成功')
+    const image = await loadImage(previewUrl)
+    coverCrop.image = image
+    coverCrop.naturalWidth = image.naturalWidth
+    coverCrop.naturalHeight = image.naturalHeight
+    coverCrop.visible = true
   } catch (e) { console.error(e) }
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = reject
+    image.src = src
+  })
+}
+
+function getCropRect(image, aspect) {
+  const sourceAspect = image.naturalWidth / image.naturalHeight
+  let width
+  let height
+  if (sourceAspect > aspect) {
+    height = image.naturalHeight
+    width = height * aspect
+  } else {
+    width = image.naturalWidth
+    height = width / aspect
+  }
+
+  width /= coverCrop.zoom
+  height /= coverCrop.zoom
+
+  const centerX = image.naturalWidth * (coverCrop.focalX / 100)
+  const centerY = image.naturalHeight * (coverCrop.focalY / 100)
+  const x = Math.min(Math.max(centerX - width / 2, 0), image.naturalWidth - width)
+  const y = Math.min(Math.max(centerY - height / 2, 0), image.naturalHeight - height)
+
+  return { x, y, width, height }
+}
+
+function cropToBlob(image, aspect, outputWidth, outputHeight) {
+  const rect = getCropRect(image, aspect)
+  const canvas = document.createElement('canvas')
+  canvas.width = outputWidth
+  canvas.height = outputHeight
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, outputWidth, outputHeight)
+  ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, 0, 0, outputWidth, outputHeight)
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob)
+      else reject(new Error('封面裁剪失败'))
+    }, 'image/jpeg', 0.9)
+  })
+}
+
+function variantFile(blob, name) {
+  const baseName = (name || 'cover').replace(/\.[^.]+$/, '').replace(/[^\w\u4e00-\u9fa5-]+/g, '_')
+  return {
+    card: new File([blob.card], `${baseName}_card.jpg`, { type: 'image/jpeg' }),
+    detail: new File([blob.detail], `${baseName}_detail.jpg`, { type: 'image/jpeg' }),
+    thumb: new File([blob.thumb], `${baseName}_thumb.jpg`, { type: 'image/jpeg' }),
+  }
+}
+
+async function confirmCoverCrop() {
+  if (!coverCrop.file || !coverCrop.image) return
+  coverUploading.value = true
+  try {
+    const variants = {
+      card: await cropToBlob(coverCrop.image, 16 / 9, 1200, 675),
+      detail: await cropToBlob(coverCrop.image, 16 / 9, 1600, 900),
+      thumb: await cropToBlob(coverCrop.image, 3 / 2, 480, 320),
+    }
+    const files = variantFile(variants, coverCrop.file.name)
+    const [originalRes, cardRes, detailRes, thumbRes] = await Promise.all([
+      uploadImage(coverCrop.file),
+      uploadImage(files.card),
+      uploadImage(files.detail),
+      uploadImage(files.thumb),
+    ])
+
+    const cropData = {
+      focalX: coverCrop.focalX,
+      focalY: coverCrop.focalY,
+      zoom: coverCrop.zoom,
+      originalWidth: coverCrop.naturalWidth,
+      originalHeight: coverCrop.naturalHeight,
+    }
+    form.cover_original_url = originalRes.data.url
+    form.cover_card_url = cardRes.data.url
+    form.cover_detail_url = detailRes.data.url
+    form.cover_thumb_url = thumbRes.data.url
+    form.cover_url = cardRes.data.url
+    form.cover_crop_data = JSON.stringify(cropData)
+    coverCrop.visible = false
+    ElMessage.success('封面裁剪上传成功')
+  } catch (e) {
+    console.error(e)
+    ElMessage.error('封面处理失败，请重新上传')
+  } finally {
+    coverUploading.value = false
+  }
+}
+
+function cancelCoverCrop() {
+  coverCrop.visible = false
 }
 
 async function handleFileUpload({ file }) {
@@ -351,6 +556,11 @@ onMounted(async () => {
         award: w.award || '',
         work_type: w.work_type || '',
         cover_url: w.cover_url || '',
+        cover_original_url: w.cover_original_url || '',
+        cover_card_url: w.cover_card_url || '',
+        cover_detail_url: w.cover_detail_url || '',
+        cover_thumb_url: w.cover_thumb_url || '',
+        cover_crop_data: w.cover_crop_data || '',
         content: w.content || '',
         demo_url: w.demo_url || '',
         attachment_url: w.attachment_url || '',
@@ -365,12 +575,72 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (themeObserver) { themeObserver.disconnect(); themeObserver = null }
+  if (coverCrop.previewUrl) URL.revokeObjectURL(coverCrop.previewUrl)
 })
 </script>
 
 <style scoped>
 .page-title { font-size: 24px; margin-bottom: 20px; }
 .file-name { margin-left: 10px; font-size: 13px; color: #909399; }
+.cover-field { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.cover-upload-preview {
+  width: 200px;
+  height: 112px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+.cover-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.cover-tip { font-size: 12px; color: var(--text-tertiary); }
+.crop-dialog {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 24px;
+}
+.crop-main { min-width: 0; }
+.crop-preview {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+}
+.crop-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.crop-preview-main {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+.crop-controls { margin-top: 16px; }
+.crop-control {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.crop-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.preview-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+.preview-card,
+.preview-detail { aspect-ratio: 16 / 9; }
+.preview-thumb { aspect-ratio: 3 / 2; }
 .gallery-previews { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .gallery-item { position: relative; display: inline-block; }
 .gallery-del {

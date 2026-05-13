@@ -8,7 +8,7 @@
     <el-table :data="works" v-loading="loading" stripe>
       <el-table-column label="封面" width="80">
         <template #default="{ row }">
-          <el-image :src="row.cover_url || ''" style="width: 50px; height: 35px" fit="cover">
+          <el-image :src="row.cover_thumb_url || row.cover_card_url || row.cover_url || ''" style="width: 50px; height: 35px" fit="cover">
             <template #error><div class="img-ph">无</div></template>
           </el-image>
         </template>

@@ -35,7 +35,7 @@
         <el-table-column type="index" label="序号" width="64" align="center" />
         <el-table-column label="封面" width="72" align="center">
           <template #default="{ row }">
-            <el-image :src="row.cover_url || ''" style="width:40px;height:28px;border-radius:4px" fit="cover">
+            <el-image :src="row.cover_thumb_url || row.cover_card_url || row.cover_url || ''" style="width:40px;height:28px;border-radius:4px" fit="cover">
               <template #error><div class="img-ph">—</div></template>
             </el-image>
           </template>

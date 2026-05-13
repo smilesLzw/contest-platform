@@ -1,7 +1,7 @@
 <template>
   <div class="work-card" @click="$router.push(`/works/${work.id}`)">
     <div class="cover">
-      <el-image :src="work.cover_url || ''" fit="cover" style="width:100%;height:100%">
+      <el-image :src="work.cover_card_url || work.cover_url || ''" fit="cover" style="width:100%;height:100%">
         <template #error>
           <div class="cover-fallback">{{ typeIcon }}</div>
         </template>

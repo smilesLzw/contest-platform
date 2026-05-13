@@ -4,20 +4,20 @@
     <div v-else-if="work" class="detail-content">
       <div class="main-area">
         <!-- 封面图（音乐/视频/网站/无类型） -->
-        <el-image v-if="!isGraphic" :src="work.cover_url || ''" fit="cover" class="cover-image">
+        <el-image v-if="!isGraphic" :src="detailCoverUrl || ''" fit="cover" class="cover-image">
           <template #error><div class="placeholder">◆</div></template>
         </el-image>
 
         <!-- 制图作品：封面大图 -->
-        <div v-if="isGraphic && work.cover_url" class="graphic-hero" @click="openLightbox(0)">
-          <img :src="work.cover_url" alt="" />
+        <div v-if="isGraphic && detailCoverUrl" class="graphic-hero" @click="openLightbox(0)">
+          <img :src="detailCoverUrl" alt="" />
         </div>
 
         <!-- 音乐作品：音频播放器 -->
-        <AudioPlayer v-if="isMusic && work.audio_url" :src="work.audio_url" :title="work.title" :coverUrl="work.cover_url" class="media-section" />
+        <AudioPlayer v-if="isMusic && work.audio_url" :src="work.audio_url" :title="work.title" :coverUrl="work.cover_thumb_url || work.cover_card_url || work.cover_url" class="media-section" />
 
         <!-- 视频作品：视频播放器 -->
-        <VideoPlayer v-if="isVideo && work.video_url" :src="work.video_url" :poster="work.cover_url" class="media-section" />
+        <VideoPlayer v-if="isVideo && work.video_url" :src="work.video_url" :poster="detailCoverUrl" class="media-section" />
 
         <!-- 网站作品：预览占位（Docker 托管第二期实现） -->
         <div v-if="isWebsite" class="media-section website-preview">
@@ -38,7 +38,7 @@
 
         <!-- 制图作品：图库 -->
         <div v-if="isGraphic && galleryList.length" class="gallery">
-          <img v-for="(url, i) in galleryList" :key="i" :src="url" class="gallery-thumb" @click="openLightbox(i + 1)" alt="" />
+          <img v-for="(url, i) in galleryList" :key="i" :src="url" class="gallery-thumb" @click="openLightbox(galleryStartIndex + i)" alt="" />
         </div>
 
         <div class="content" v-if="work.content">
@@ -96,6 +96,9 @@ const isGraphic = computed(() => work.value?.work_type === 'graphic')
 const isVideo = computed(() => work.value?.work_type === 'video')
 const isWebsite = computed(() => work.value?.work_type === 'website')
 const typeLabel = computed(() => typeMap[work.value?.work_type] || '')
+const detailCoverUrl = computed(() => work.value?.cover_detail_url || work.value?.cover_card_url || work.value?.cover_url || '')
+const lightboxCoverUrl = computed(() => work.value?.cover_original_url || detailCoverUrl.value)
+const galleryStartIndex = computed(() => lightboxCoverUrl.value ? 1 : 0)
 
 const galleryList = computed(() => {
   if (!work.value?.gallery_urls) return []
@@ -106,7 +109,7 @@ const galleryList = computed(() => {
 
 const allImages = computed(() => {
   const list = []
-  if (work.value?.cover_url) list.push(work.value.cover_url)
+  if (lightboxCoverUrl.value) list.push(lightboxCoverUrl.value)
   list.push(...galleryList.value)
   return list
 })
