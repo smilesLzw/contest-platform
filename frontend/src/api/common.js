@@ -12,27 +12,38 @@ export function getLogs(params) {
   return request.get('/logs', { params })
 }
 
-export function uploadImage(file) {
+function appendUploadMeta(formData, meta = {}) {
+  if (meta.title) formData.append('title', meta.title)
+  if (meta.academic_year) formData.append('academic_year', meta.academic_year)
+  if (meta.semester) formData.append('semester', meta.semester)
+  if (meta.suffix) formData.append('suffix', meta.suffix)
+}
+
+export function uploadImage(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
+  appendUploadMeta(formData, meta)
   return request.post('/upload/image', formData)
 }
 
-export function uploadFile(file) {
+export function uploadFile(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
+  appendUploadMeta(formData, meta)
   return request.post('/upload/file', formData)
 }
 
-export function uploadAudio(file) {
+export function uploadAudio(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
+  appendUploadMeta(formData, meta)
   return request.post('/upload/audio', formData)
 }
 
-export function uploadVideo(file) {
+export function uploadVideo(file, meta) {
   const formData = new FormData()
   formData.append('file', file)
+  appendUploadMeta(formData, meta)
   return request.post('/upload/video', formData)
 }
 

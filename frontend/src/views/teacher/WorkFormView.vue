@@ -346,7 +346,25 @@ for (let i = 0; i < 5; i++) {
   academicYears.push(`${start}-${start + 1}`)
 }
 
+function workUploadMeta(suffix = '') {
+  return {
+    title: form.title,
+    academic_year: form.academic_year,
+    semester: form.semester,
+    suffix,
+  }
+}
+
+function ensureWorkUploadMeta() {
+  if (!form.title || !form.academic_year || !form.semester) {
+    ElMessage.warning('请先填写作品名称、学年和学期，再上传媒体文件')
+    return false
+  }
+  return true
+}
+
 async function handleCoverUpload({ file }) {
+  if (!ensureWorkUploadMeta()) return
   if (coverCrop.previewUrl) URL.revokeObjectURL(coverCrop.previewUrl)
   const previewUrl = URL.createObjectURL(file)
   coverCrop.file = file
@@ -434,10 +452,10 @@ async function confirmCoverCrop() {
     }
     const files = variantFile(variants, coverCrop.file.name)
     const [originalRes, cardRes, detailRes, thumbRes] = await Promise.all([
-      uploadImage(coverCrop.file),
-      uploadImage(files.card),
-      uploadImage(files.detail),
-      uploadImage(files.thumb),
+      uploadImage(coverCrop.file, workUploadMeta('cover_original')),
+      uploadImage(files.card, workUploadMeta('cover_card')),
+      uploadImage(files.detail, workUploadMeta('cover_detail')),
+      uploadImage(files.thumb, workUploadMeta('cover_thumb')),
     ])
 
     const cropData = {
@@ -468,32 +486,37 @@ function cancelCoverCrop() {
 }
 
 async function handleFileUpload({ file }) {
+  if (!ensureWorkUploadMeta()) return
   try {
-    const res = await uploadFile(file)
+    const res = await uploadFile(file, workUploadMeta(form.work_type === 'website' ? 'project' : 'attachment'))
     form.attachment_url = res.data.url
     ElMessage.success('附件上传成功')
   } catch (e) { console.error(e) }
 }
 
 async function handleAudioUpload({ file }) {
+  if (!ensureWorkUploadMeta()) return
   try {
-    const res = await uploadAudio(file)
+    const res = await uploadAudio(file, workUploadMeta('audio'))
     form.audio_url = res.data.url
     ElMessage.success('音频上传成功')
   } catch (e) { console.error(e) }
 }
 
 async function handleVideoUpload({ file }) {
+  if (!ensureWorkUploadMeta()) return
   try {
-    const res = await uploadVideo(file)
+    const res = await uploadVideo(file, workUploadMeta('video'))
     form.video_url = res.data.url
     ElMessage.success('视频上传成功')
   } catch (e) { console.error(e) }
 }
 
 async function handleGalleryUpload({ file }) {
+  if (!ensureWorkUploadMeta()) return
   try {
-    const res = await uploadImage(file)
+    const nextIndex = galleryList.value.length + 1
+    const res = await uploadImage(file, workUploadMeta(`gallery_${nextIndex}`))
     const list = [...galleryList.value, res.data.url]
     form.gallery_urls = JSON.stringify(list)
     ElMessage.success('图片上传成功')

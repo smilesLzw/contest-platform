@@ -1,8 +1,9 @@
 """文件上传接口"""
 import os
+import re
 import uuid
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -24,9 +25,44 @@ def _generate_filename(original_name: str) -> str:
     return f"{date_str}_{short_uuid}_{original_name}"
 
 
+def _safe_name(value: str) -> str:
+    """保留中文、字母、数字和少量分隔符，避免路径穿越和奇怪文件名。"""
+    value = (value or "").strip()
+    value = re.sub(r"[^\w\u4e00-\u9fff.-]+", "-", value)
+    value = re.sub(r"-{2,}", "-", value).strip("-._")
+    return value[:80] or "作品"
+
+
+def _extension(original_name: str, default_ext: str) -> str:
+    ext = os.path.splitext(original_name or "")[1].lower()
+    return ext if ext else default_ext
+
+
+def _work_filename(
+    original_name: str,
+    default_name: str,
+    default_ext: str,
+    academic_year: str | None,
+    semester: int | None,
+    title: str | None,
+    suffix: str | None = None,
+) -> str:
+    """生成作品稳定文件名：2025-2026-2-作品名[_suffix].ext。"""
+    if not academic_year or not semester or not title:
+        return _generate_filename(original_name or default_name)
+
+    prefix = f"{_safe_name(academic_year)}-{semester}-{_safe_name(title)}"
+    safe_suffix = f"_{_safe_name(suffix)}" if suffix else ""
+    return f"{prefix}{safe_suffix}{_extension(original_name or default_name, default_ext)}"
+
+
 @router.post("/image", response_model=ApiResponse)
 async def upload_image(
     file: UploadFile = File(...),
+    title: str | None = Form(None),
+    academic_year: str | None = Form(None),
+    semester: int | None = Form(None),
+    suffix: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -40,7 +76,7 @@ async def upload_image(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="图片大小不能超过5MB")
 
-    filename = _generate_filename(file.filename or "image.png")
+    filename = _work_filename(file.filename or "image.png", "image.png", ".png", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "images")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
@@ -55,6 +91,10 @@ async def upload_image(
 @router.post("/file", response_model=ApiResponse)
 async def upload_file(
     file: UploadFile = File(...),
+    title: str | None = Form(None),
+    academic_year: str | None = Form(None),
+    semester: int | None = Form(None),
+    suffix: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_teacher_or_admin),
 ):
@@ -68,7 +108,7 @@ async def upload_file(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="文件大小不能超过50MB")
 
-    filename = _generate_filename(file.filename or "file.zip")
+    filename = _work_filename(file.filename or "file.zip", "file.zip", ".zip", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "files")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
@@ -83,6 +123,10 @@ async def upload_file(
 @router.post("/audio", response_model=ApiResponse)
 async def upload_audio(
     file: UploadFile = File(...),
+    title: str | None = Form(None),
+    academic_year: str | None = Form(None),
+    semester: int | None = Form(None),
+    suffix: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_teacher_or_admin),
 ):
@@ -96,7 +140,7 @@ async def upload_audio(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="音频大小不能超过100MB")
 
-    filename = _generate_filename(file.filename or "audio.mp3")
+    filename = _work_filename(file.filename or "audio.mp3", "audio.mp3", ".mp3", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "audio")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
@@ -111,6 +155,10 @@ async def upload_audio(
 @router.post("/video", response_model=ApiResponse)
 async def upload_video(
     file: UploadFile = File(...),
+    title: str | None = Form(None),
+    academic_year: str | None = Form(None),
+    semester: int | None = Form(None),
+    suffix: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_teacher_or_admin),
 ):
@@ -124,7 +172,7 @@ async def upload_video(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="视频大小不能超过1GB")
 
-    filename = _generate_filename(file.filename or "video.mp4")
+    filename = _work_filename(file.filename or "video.mp4", "video.mp4", ".mp4", academic_year, semester, title, suffix)
     save_dir = os.path.join(UPLOAD_DIR, "videos")
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, filename)
