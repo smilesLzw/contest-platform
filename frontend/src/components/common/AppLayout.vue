@@ -24,4 +24,11 @@ import MusicPlayer from './MusicPlayer.vue'
   padding: 28px 24px;
   overflow: visible;
 }
+
+@media (max-width: 760px) {
+  .main-content {
+    min-height: calc(100vh - 160px);
+    padding: 22px 14px;
+  }
+}
 </style>

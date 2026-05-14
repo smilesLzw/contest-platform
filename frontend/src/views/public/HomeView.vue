@@ -729,4 +729,49 @@ onBeforeUnmount(() => {
     min-height: 84px;
   }
 }
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 74px 14px 82px;
+  }
+
+  .hero-title {
+    font-size: 30px;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+  }
+
+  .hero-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hero-btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .stats-band {
+    margin: 22px 14px 36px;
+  }
+
+  .section {
+    padding: 0 14px;
+  }
+
+  .work-tile:hover {
+    transform: none;
+  }
+
+  .work-body {
+    padding: 18px;
+  }
+
+  .work-body h3 {
+    font-size: 19px;
+  }
+}
 </style>

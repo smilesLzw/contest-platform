@@ -190,4 +190,69 @@ function handleLogout() {
   background: var(--bg-card-hover);
   color: var(--text-primary);
 }
+
+@media (max-width: 760px) {
+  .app-header {
+    height: auto;
+    min-height: 58px;
+  }
+
+  .header-inner {
+    min-height: 58px;
+    height: auto;
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding: 0 14px 8px;
+  }
+
+  .logo {
+    flex: 1;
+    min-width: 0;
+    margin-right: 8px;
+  }
+
+  .logo-text {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav-links {
+    order: 3;
+    flex: 0 0 100%;
+    gap: 2px;
+    overflow-x: auto;
+    padding-top: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-links a {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+  }
+
+  .header-right {
+    margin-left: 8px;
+  }
+
+  .theme-toggle {
+    margin-right: 4px;
+  }
+}
+
+@media (max-width: 380px) {
+  .logo-text {
+    max-width: 118px;
+  }
+
+  .nav-links a {
+    padding: 6px 10px;
+  }
+}
 </style>

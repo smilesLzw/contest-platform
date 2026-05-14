@@ -196,4 +196,86 @@ onMounted(async () => {
 .tag-free { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(52,199,89,0.1); color: var(--green); font-weight: 500; }
 .tag-free.paid { background: rgba(255,149,0,0.1); color: var(--amber); }
 .tool-rating { font-size: 12px; color: var(--amber); font-weight: 600; }
+
+@media (max-width: 1100px) {
+  .tools-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .page-title {
+    font-size: 32px;
+  }
+
+  .page-desc {
+    font-size: 15px;
+    margin-bottom: 22px;
+  }
+
+  .filter-bar {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 32px;
+    border-radius: 18px;
+  }
+
+  .region-tabs,
+  .price-tabs {
+    padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .region-tabs::-webkit-scrollbar,
+  .price-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-divider {
+    display: none;
+  }
+
+  .filter-btn {
+    flex: 0 0 auto;
+    padding: 7px 14px;
+  }
+
+  .category-section {
+    margin-bottom: 42px;
+  }
+
+  .category-title {
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+
+  .tools-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .tool-card {
+    padding: 18px 12px 14px;
+    border-radius: 16px;
+  }
+
+  .tool-card:hover {
+    transform: none;
+  }
+
+  .card-footer {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+}
 </style>

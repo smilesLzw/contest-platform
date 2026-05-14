@@ -168,4 +168,86 @@ onMounted(async () => {
   color: var(--text-tertiary);
   font-size: 12px;
 }
+
+@media (max-width: 1100px) {
+  .works-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .page-title {
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+
+  .filter-bar {
+    padding: 16px;
+  }
+
+  .filter-bar :deep(.el-form) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .filter-bar :deep(.el-form-item) {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 14px;
+  }
+
+  .filter-bar :deep(.el-form-item__label) {
+    display: block;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+
+  .filter-bar :deep(.el-select),
+  .filter-bar :deep(.el-input) {
+    width: 100% !important;
+  }
+
+  .filter-bar :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
+  }
+
+  .filter-bar :deep(.el-form-item:last-child .el-form-item__content) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .filter-bar :deep(.el-form-item:last-child .el-button) {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .view-bar {
+    justify-content: flex-start;
+  }
+
+  .works-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .works-list {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .works-list :deep(.el-table) {
+    min-width: 720px;
+  }
+
+  .pagination-wrap {
+    margin-top: 28px;
+  }
+
+  .pagination-wrap :deep(.el-pagination) {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
 </style>

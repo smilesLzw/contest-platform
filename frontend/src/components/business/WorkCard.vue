@@ -107,4 +107,23 @@ const typeIcon = computed(() => typeMap[props.work.work_type]?.icon || '◆')
 }
 .authors { font-size: 13px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .year { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+
+@media (max-width: 760px) {
+  .work-card:hover {
+    transform: none;
+  }
+
+  .cover {
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+
+  .info {
+    padding: 14px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+}
 </style>

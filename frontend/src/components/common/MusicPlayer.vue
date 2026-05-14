@@ -1,7 +1,7 @@
 <template>
   <div class="float-music" v-if="tracks.length" @mouseenter="expanded = true" @mouseleave="expanded = false" :class="{ expanded }">
     <!-- 收起状态：圆形按钮 -->
-    <div class="fm-trigger">
+    <div class="fm-trigger" @click="expanded = !expanded">
       <span class="fm-icon" :class="{ playing: playing }">♪</span>
       <span class="fm-wave" v-if="playing">
         <i></i><i></i><i></i>
@@ -201,7 +201,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: default;
+  cursor: pointer;
   flex-shrink: 0;
   position: relative;
   z-index: 2;
@@ -327,4 +327,47 @@ onBeforeUnmount(() => {
 
 .slide-up-enter-active, .slide-up-leave-active { transition: all 0.2s ease; }
 .slide-up-enter-from, .slide-up-leave-to { opacity: 0; transform: translateY(8px); }
+
+@media (max-width: 760px) {
+  .float-music {
+    right: 14px;
+    bottom: 14px;
+    max-width: calc(100vw - 28px);
+  }
+
+  .float-music.expanded {
+    left: 14px;
+    right: 14px;
+  }
+
+  .fm-trigger {
+    width: 42px;
+    height: 42px;
+  }
+
+  .fm-panel {
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+    padding: 6px 10px 6px 8px;
+  }
+
+  .fm-title {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .fm-volume {
+    display: none;
+  }
+
+  .fm-playlist {
+    left: 14px;
+    right: 14px;
+    bottom: 68px;
+    width: auto;
+    max-height: 220px;
+  }
+}
 </style>

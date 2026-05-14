@@ -247,4 +247,44 @@ onBeforeUnmount(() => {
 .ap-volume { display: flex; align-items: center; gap: 6px; }
 .ap-vol-icon { font-size: 16px; color: var(--text-tertiary); }
 .ap-vol-slider { width: 60px; accent-color: var(--accent); }
+
+@media (max-width: 640px) {
+  .audio-player {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .ap-cover {
+    width: 58px;
+    height: 58px;
+    border-radius: 10px;
+  }
+
+  .ap-controls {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ap-progress {
+    min-width: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .ap-track {
+    width: 100%;
+    height: 8px;
+  }
+
+  .ap-thumb {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .ap-volume {
+    display: none;
+  }
+}
 </style>

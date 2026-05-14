@@ -68,6 +68,7 @@ body {
   line-height: 1.6;
   font-size: 16px;
   transition: background 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 /* Scrollbar */

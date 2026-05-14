@@ -175,4 +175,63 @@ onMounted(loadNews)
 .card-meta { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-tertiary); }
 
 .pagination { display: flex; justify-content: center; margin-top: 40px; }
+
+@media (max-width: 1100px) {
+  .news-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .page-title {
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+
+  .category-tabs {
+    overflow-x: auto;
+    margin: 0 -14px 24px;
+    padding: 0 14px 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .category-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-item {
+    flex: 0 0 auto;
+    padding: 7px 16px;
+  }
+
+  .news-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .news-card:hover {
+    transform: none;
+  }
+
+  .card-cover {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .card-meta {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .pagination {
+    margin-top: 28px;
+  }
+
+  .pagination :deep(.el-pagination) {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
 </style>

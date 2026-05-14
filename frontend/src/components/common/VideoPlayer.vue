@@ -28,10 +28,23 @@ const videoEl = ref(null)
   overflow: hidden;
   background: #000;
   box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+  aspect-ratio: 16 / 9;
 }
 .vp-video {
   display: block;
   width: 100%;
+  height: 100%;
+  object-fit: contain;
   max-height: 520px;
+}
+
+@media (max-width: 760px) {
+  .video-player {
+    border-radius: 14px;
+  }
+
+  .vp-video {
+    max-height: none;
+  }
 }
 </style>

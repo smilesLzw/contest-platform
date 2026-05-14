@@ -244,4 +244,79 @@ onMounted(async () => {
 }
 .website-icon { font-size: 48px; color: var(--text-tertiary); display: block; margin-bottom: 12px; }
 .website-placeholder p { color: var(--text-secondary); margin-bottom: 16px; }
+
+@media (max-width: 900px) {
+  .detail-content {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .side-area {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .cover-image {
+    max-height: none;
+    aspect-ratio: 16 / 10;
+    margin-bottom: 18px;
+  }
+
+  .placeholder {
+    height: 220px;
+  }
+
+  .title {
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+
+  .tags {
+    margin-bottom: 22px;
+  }
+
+  .content {
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .content :deep(h2) {
+    font-size: 20px;
+  }
+
+  .content :deep(h3) {
+    font-size: 17px;
+  }
+
+  .no-content {
+    padding: 42px 16px;
+  }
+
+  .graphic-hero {
+    margin-bottom: 18px;
+  }
+
+  .graphic-hero img {
+    max-height: none;
+  }
+
+  .gallery {
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .gallery-thumb {
+    width: 88px;
+    height: 64px;
+  }
+
+  .website-placeholder {
+    padding: 32px 18px;
+  }
+
+  .side-card {
+    padding: 18px;
+  }
+}
 </style>

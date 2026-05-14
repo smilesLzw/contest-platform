@@ -31,4 +31,20 @@
   gap: 10px;
 }
 .footer-divider { color: var(--border-subtle); }
+
+@media (max-width: 760px) {
+  .app-footer {
+    margin-top: 48px;
+    padding: 20px 0;
+  }
+
+  .footer-inner {
+    padding: 0 16px;
+  }
+
+  .footer-text {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+}
 </style>

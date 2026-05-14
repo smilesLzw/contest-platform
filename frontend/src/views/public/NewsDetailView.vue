@@ -218,8 +218,40 @@ onBeforeUnmount(() => {
 .actions { max-width: 750px; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border-subtle); }
 
 @media (max-width: 768px) {
+  .news-layout {
+    display: block;
+  }
+
   .toc-sidebar { display: none; }
+  .title {
+    font-size: 28px;
+  }
+
+  .meta {
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
   .content { max-width: 100%; }
+  .content :deep(h1) { font-size: 24px; }
+  .content :deep(h2) { font-size: 20px; }
+  .content :deep(h3) { font-size: 17px; }
+  .content :deep(table) { min-width: 640px; }
   .actions { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 24px;
+  }
+
+  .content {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+
+  .actions {
+    margin-top: 36px;
+  }
 }
 </style>
