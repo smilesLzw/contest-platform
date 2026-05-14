@@ -51,11 +51,11 @@ export function uploadAudio(file, meta) {
   return request.post('/upload/audio', formData, { timeout: UPLOAD_TIMEOUTS.audio })
 }
 
-export function uploadVideo(file, meta) {
+export function uploadVideo(file, meta, config = {}) {
   const formData = new FormData()
   formData.append('file', file)
   appendUploadMeta(formData, meta)
-  return request.post('/upload/video', formData, { timeout: UPLOAD_TIMEOUTS.video })
+  return request.post('/upload/video', formData, { timeout: UPLOAD_TIMEOUTS.video, ...config })
 }
 
 export function getBgMusic() {

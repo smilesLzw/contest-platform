@@ -142,14 +142,31 @@
 
         <!-- 视频：视频上传 -->
         <el-form-item v-if="form.work_type === 'video'" label="视频文件">
-          <el-upload
-            :show-file-list="false"
-            :http-request="handleVideoUpload"
-            accept="video/mp4,video/webm,video/quicktime"
-          >
-            <el-button>上传视频</el-button>
-          </el-upload>
-          <span v-if="form.video_url" class="file-name">已上传：{{ form.video_url.split('/').pop() }}</span>
+          <div class="video-upload-field">
+            <div class="upload-inline">
+              <el-upload
+                :show-file-list="false"
+                :http-request="handleVideoUpload"
+                accept="video/mp4,video/webm,video/quicktime"
+              >
+                <el-button :loading="videoUploading" :disabled="videoUploading">
+                  {{ videoUploading ? '上传中' : '上传视频' }}
+                </el-button>
+              </el-upload>
+              <span v-if="form.video_url && !videoUploading" class="file-name">已上传：{{ form.video_url.split('/').pop() }}</span>
+            </div>
+            <div v-if="videoUploading || videoUploadProgress > 0" class="upload-progress-panel">
+              <div class="upload-progress-meta">
+                <span>{{ videoUploadName || '视频文件' }}</span>
+                <span>{{ videoUploading ? uploadProgressText : '上传完成' }}</span>
+              </div>
+              <el-progress
+                :percentage="videoUploadProgress"
+                :status="videoUploadStatus"
+                :stroke-width="8"
+              />
+            </div>
+          </div>
         </el-form-item>
 
         <!-- 网站：上传项目压缩包 -->
@@ -275,6 +292,9 @@ const formRef = ref(null)
 const loading = ref(false)
 const submitting = ref(false)
 const coverUploading = ref(false)
+const videoUploading = ref(false)
+const videoUploadProgress = ref(0)
+const videoUploadName = ref('')
 const majors = ref([])
 const teachers = ref([])
 const competitions = ref([])
@@ -310,6 +330,14 @@ const galleryList = computed(() => {
 })
 
 const coverPreviewUrl = computed(() => form.cover_card_url || form.cover_url)
+const videoUploadStatus = computed(() => {
+  if (videoUploading.value) return undefined
+  return videoUploadProgress.value >= 100 ? 'success' : undefined
+})
+const uploadProgressText = computed(() => {
+  if (videoUploadProgress.value >= 99) return '正在处理'
+  return `${videoUploadProgress.value}%`
+})
 
 const coverCrop = reactive({
   visible: false,
@@ -505,11 +533,26 @@ async function handleAudioUpload({ file }) {
 
 async function handleVideoUpload({ file }) {
   if (!ensureWorkUploadMeta()) return
+  videoUploading.value = true
+  videoUploadProgress.value = 0
+  videoUploadName.value = file.name
   try {
-    const res = await uploadVideo(file, workUploadMeta('video'))
+    const res = await uploadVideo(file, workUploadMeta('video'), {
+      onUploadProgress: (event) => {
+        if (!event.total) return
+        const percent = Math.round((event.loaded * 100) / event.total)
+        videoUploadProgress.value = Math.min(99, Math.max(1, percent))
+      },
+    })
     form.video_url = res.data.url
+    videoUploadProgress.value = 100
     ElMessage.success('视频上传成功')
-  } catch (e) { console.error(e) }
+  } catch (e) {
+    console.error(e)
+    videoUploadProgress.value = 0
+  } finally {
+    videoUploading.value = false
+  }
 }
 
 async function handleGalleryUpload({ file }) {
@@ -605,6 +648,44 @@ onBeforeUnmount(() => {
 <style scoped>
 .page-title { font-size: 24px; margin-bottom: 20px; }
 .file-name { margin-left: 10px; font-size: 13px; color: #909399; }
+.video-upload-field {
+  width: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.upload-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.upload-inline .file-name { margin-left: 0; }
+.upload-progress-panel {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+}
+.upload-progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.upload-progress-meta span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-progress-meta span:last-child {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
 .cover-field { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
 .cover-upload-preview {
   width: 200px;
