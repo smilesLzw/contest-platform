@@ -56,6 +56,24 @@ const router = createRouter({
   routes,
 })
 
+const THEME_KEY = 'app-theme'
+
+function getAutoTheme() {
+  const hour = new Date().getHours()
+  return hour < 6 || hour >= 21 ? 'dark' : 'light'
+}
+
+function applyRouteTheme(path) {
+  if (typeof document === 'undefined') return
+  if (path.startsWith('/admin')) {
+    document.documentElement.setAttribute('data-theme', 'light')
+    return
+  }
+
+  const saved = localStorage.getItem(THEME_KEY)
+  document.documentElement.setAttribute('data-theme', saved || getAutoTheme())
+}
+
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
@@ -80,6 +98,10 @@ router.beforeEach((to, from, next) => {
   }
 
   next()
+})
+
+router.afterEach((to) => {
+  applyRouteTheme(to.path)
 })
 
 export default router

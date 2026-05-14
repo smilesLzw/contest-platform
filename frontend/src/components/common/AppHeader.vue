@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { Sunny, Moon } from '@element-plus/icons-vue'
@@ -48,6 +48,7 @@ const isScrolled = ref(false)
 const isDark = ref(false)
 
 const THEME_KEY = 'app-theme'
+let autoThemeTimer = null
 
 function applyTheme(dark) {
   isDark.value = dark
@@ -72,9 +73,16 @@ onMounted(() => {
 
   // Listen for time changes (every minute) if no manual preference
   if (!saved) {
-    setInterval(() => {
+    autoThemeTimer = setInterval(() => {
       applyTheme(getAutoTheme() === 'dark')
     }, 60000)
+  }
+})
+
+onBeforeUnmount(() => {
+  if (autoThemeTimer) {
+    clearInterval(autoThemeTimer)
+    autoThemeTimer = null
   }
 })
 

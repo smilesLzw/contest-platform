@@ -6,8 +6,9 @@
     <title>院赛作品展示与AI工具导航平台</title>
     <script>
       (function() {
+        var isAdmin = window.location.pathname.indexOf('/admin') === 0;
         var saved = localStorage.getItem('app-theme');
-        var theme = saved || (function() {
+        var theme = isAdmin ? 'light' : saved || (function() {
           var h = new Date().getHours();
           return (h >= 6 && h < 21) ? 'light' : 'dark';
         })();
