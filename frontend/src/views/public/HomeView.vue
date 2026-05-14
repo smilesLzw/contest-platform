@@ -274,8 +274,8 @@ onBeforeUnmount(() => {
   background: var(--bg-secondary) url('../../assets/images/hero-banner.png') center/cover no-repeat;
   margin-bottom: 0;
 }
-:global([data-theme="dark"]) .hero {
-  background-image: url('../../assets/images/hero-banner-dark.png'), linear-gradient(rgba(29, 29, 31, 0.64), rgba(29, 29, 31, 0.78)), url('../../assets/images/hero-banner.png');
+:global([data-theme="dark"] .hero) {
+  background-image: linear-gradient(rgba(29, 29, 31, 0.16), rgba(29, 29, 31, 0.18)), url('../../assets/images/hero-banner-dark.png'), url('../../assets/images/hero-banner.png');
 }
 .hero-title {
   font-family: var(--font-display);
