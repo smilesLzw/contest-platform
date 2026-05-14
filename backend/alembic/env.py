@@ -18,7 +18,11 @@ for env_path in (
     backend_dir.parent / ".env",
     Path(os.getenv("BACKEND_ENV_FILE", "/etc/contest-platform/backend.env")),
 ):
-    load_dotenv(env_path, override=False)
+    try:
+        if env_path.is_file() and os.access(env_path, os.R_OK):
+            load_dotenv(env_path, override=False)
+    except OSError:
+        pass
 
 env_db_url = os.getenv("DATABASE_URL", "")
 sync_db_url = env_db_url.replace("mysql+asyncmy://", "mysql+pymysql://")

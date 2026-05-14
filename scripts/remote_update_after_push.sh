@@ -42,9 +42,14 @@ echo "🧱 执行数据库迁移..."
 cd "$PROJECT_DIR/backend"
 export BACKEND_ENV_FILE
 if [ -x "venv/bin/alembic" ]; then
-  venv/bin/alembic upgrade head
+  ALEMBIC_BIN="venv/bin/alembic"
 else
-  alembic upgrade head
+  ALEMBIC_BIN="alembic"
+fi
+if [ -e "$BACKEND_ENV_FILE" ] && [ ! -r "$BACKEND_ENV_FILE" ]; then
+  sudo -n env BACKEND_ENV_FILE="$BACKEND_ENV_FILE" "$ALEMBIC_BIN" upgrade head
+else
+  "$ALEMBIC_BIN" upgrade head
 fi
 cd "$PROJECT_DIR"
 
