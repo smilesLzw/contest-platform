@@ -302,6 +302,7 @@ onBeforeUnmount(() => {
 .btn-primary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 12px 28px;
   border-radius: var(--radius-pill);
   font-size: 16px;
@@ -317,6 +318,7 @@ onBeforeUnmount(() => {
 .btn-secondary {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 12px 28px;
   border-radius: var(--radius-pill);
   font-size: 16px;
@@ -749,8 +751,8 @@ onBeforeUnmount(() => {
     align-items: stretch;
   }
 
-  .hero-btn {
-    justify-content: center;
+  .btn-primary,
+  .btn-secondary {
     width: 100%;
   }
 

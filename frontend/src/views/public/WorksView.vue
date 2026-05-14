@@ -182,24 +182,29 @@ onMounted(async () => {
   }
 
   .filter-bar {
-    padding: 16px;
+    padding: 12px;
+    border-radius: 18px;
+    margin-bottom: 14px;
   }
 
   .filter-bar :deep(.el-form) {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .filter-bar :deep(.el-form-item) {
     display: block;
-    margin-right: 0;
-    margin-bottom: 14px;
+    margin: 0;
   }
 
   .filter-bar :deep(.el-form-item__label) {
+    display: none;
+  }
+
+  .filter-bar :deep(.el-form-item__content) {
     display: block;
-    margin-bottom: 6px;
-    line-height: 1.4;
+    line-height: normal;
   }
 
   .filter-bar :deep(.el-select),
@@ -207,8 +212,15 @@ onMounted(async () => {
     width: 100% !important;
   }
 
+  .filter-bar :deep(.el-input__wrapper),
+  .filter-bar :deep(.el-select__wrapper) {
+    min-height: 42px;
+    border-radius: 14px;
+  }
+
+  .filter-bar :deep(.el-form-item:nth-child(4)),
   .filter-bar :deep(.el-form-item:last-child) {
-    margin-bottom: 0;
+    grid-column: 1 / -1;
   }
 
   .filter-bar :deep(.el-form-item:last-child .el-form-item__content) {
@@ -219,6 +231,8 @@ onMounted(async () => {
 
   .filter-bar :deep(.el-form-item:last-child .el-button) {
     width: 100%;
+    min-height: 42px;
+    border-radius: 14px;
     margin-left: 0;
   }
 
