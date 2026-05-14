@@ -274,6 +274,9 @@ onBeforeUnmount(() => {
   background: var(--bg-secondary) url('../../assets/images/hero-banner.png') center/cover no-repeat;
   margin-bottom: 0;
 }
+:global([data-theme="dark"]) .hero {
+  background-image: linear-gradient(rgba(29, 29, 31, 0.64), rgba(29, 29, 31, 0.78)), url('../../assets/images/hero-banner.png');
+}
 .hero-title {
   font-family: var(--font-display);
   font-size: 48px;
@@ -390,11 +393,11 @@ onBeforeUnmount(() => {
   grid-template-columns: repeat(3, 1fr);
   max-width: 760px;
   margin: 40px auto 56px;
-  border: 1px solid rgba(210, 210, 215, 0.72);
+  border: 1px solid var(--surface-border);
   border-radius: 26px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.05);
+  background: var(--surface-translucent);
+  box-shadow: 0 16px 40px var(--surface-shadow-soft);
   backdrop-filter: blur(18px);
 }
 .stat-item {
@@ -403,7 +406,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 .stat-item + .stat-item {
-  border-left: 1px solid rgba(210, 210, 215, 0.72);
+  border-left: 1px solid var(--surface-border);
 }
 .stat-item strong {
   display: block;
@@ -455,11 +458,11 @@ onBeforeUnmount(() => {
 }
 .work-tile {
   background: var(--bg-card);
-  border: 1px solid rgba(210, 210, 215, 0.62);
+  border: 1px solid var(--surface-border-soft);
   border-radius: 24px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 12px 34px var(--surface-shadow-soft);
   transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
 }
 .work-tile:hover {
@@ -581,12 +584,12 @@ onBeforeUnmount(() => {
   column-gap: 14px;
   min-height: 92px;
   background: var(--bg-card);
-  border: 1px solid rgba(210, 210, 215, 0.62);
+  border: 1px solid var(--surface-border-soft);
   border-radius: 22px;
   padding: 20px;
   cursor: pointer;
   transition: all 0.28s ease;
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.045);
+  box-shadow: 0 8px 26px var(--surface-shadow-soft);
 }
 .entry-card:hover {
   transform: translateY(-3px);
@@ -706,7 +709,7 @@ onBeforeUnmount(() => {
   }
   .stat-item + .stat-item {
     border-left: none;
-    border-top: 1px solid rgba(210, 210, 215, 0.72);
+    border-top: 1px solid var(--surface-border);
   }
   .section {
     max-width: none;
