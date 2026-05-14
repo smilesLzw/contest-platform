@@ -1,5 +1,6 @@
 """Alembic 迁移环境配置"""
 import os
+from pathlib import Path
 from logging.config import fileConfig
 
 from dotenv import load_dotenv
@@ -8,12 +9,20 @@ from sqlalchemy import pool
 
 from alembic import context
 
-# 加载 .env 中的 DATABASE_URL，将 asyncmy 替换为 pymysql（Alembic 使用同步驱动）
-load_dotenv()
+config = context.config
+
+# 加载运行环境中的 DATABASE_URL，将 asyncmy 替换为 pymysql（Alembic 使用同步驱动）
+backend_dir = Path(config.config_file_name).resolve().parent if config.config_file_name else Path(__file__).resolve().parents[1]
+for env_path in (
+    backend_dir / ".env",
+    backend_dir.parent / ".env",
+    Path(os.getenv("BACKEND_ENV_FILE", "/etc/contest-platform/backend.env")),
+):
+    load_dotenv(env_path, override=False)
+
 env_db_url = os.getenv("DATABASE_URL", "")
 sync_db_url = env_db_url.replace("mysql+asyncmy://", "mysql+pymysql://")
 
-config = context.config
 if sync_db_url:
     config.set_main_option("sqlalchemy.url", sync_db_url.replace("%", "%%"))
 
