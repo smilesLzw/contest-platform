@@ -62,7 +62,7 @@ function toggleTheme() {
 
 function getAutoTheme() {
   const hour = new Date().getHours()
-  return hour < 6 || hour >= 19 ? 'dark' : 'light'
+  return hour < 6 || hour >= 21 ? 'dark' : 'light'
 }
 
 onMounted(() => {

@@ -9,7 +9,7 @@
         var saved = localStorage.getItem('app-theme');
         var theme = saved || (function() {
           var h = new Date().getHours();
-          return (h >= 6 && h < 19) ? 'light' : 'dark';
+          return (h >= 6 && h < 21) ? 'light' : 'dark';
         })();
         document.documentElement.setAttribute('data-theme', theme);
       })();

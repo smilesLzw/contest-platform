@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
   margin-bottom: 0;
 }
 :global([data-theme="dark"]) .hero {
-  background-image: linear-gradient(rgba(29, 29, 31, 0.64), rgba(29, 29, 31, 0.78)), url('../../assets/images/hero-banner.png');
+  background-image: url('../../assets/images/hero-banner-dark.png'), linear-gradient(rgba(29, 29, 31, 0.64), rgba(29, 29, 31, 0.78)), url('../../assets/images/hero-banner.png');
 }
 .hero-title {
   font-family: var(--font-display);
