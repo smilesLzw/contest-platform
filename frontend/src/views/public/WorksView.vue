@@ -115,7 +115,7 @@ for (let i = 0; i < 5; i++) {
 async function loadWorks() {
   loading.value = true
   try {
-    const res = await getWorks({ ...filters.value, page_size: pageSize.value })
+    const res = await getWorks({ ...filters.value, page_size: pageSize.value, sort: 'award_priority' })
     works.value = res.data.items
     total.value = res.data.total
   } catch (e) { console.error(e) }

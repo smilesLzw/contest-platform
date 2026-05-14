@@ -169,10 +169,18 @@ function formatTime(t) {
   return t.slice(0, 10)
 }
 
+const awardRanks = {
+  一等奖: 1,
+  二等奖: 2,
+  三等奖: 3,
+  优秀奖: 4,
+  参与奖: 5,
+}
+
 const recommendedWorks = computed(() => {
   return [...latestWorks.value].sort((a, b) => {
-    const awardWeight = Number(hasAward(b)) - Number(hasAward(a))
-    if (awardWeight !== 0) return awardWeight
+    const rankDiff = awardRank(a) - awardRank(b)
+    if (rankDiff !== 0) return rankDiff
     return new Date(b.published_at || b.created_at || 0) - new Date(a.published_at || a.created_at || 0)
   })
 })
@@ -199,6 +207,12 @@ function hasAward(work) {
   return Boolean(award && !['暂无', '无', '无奖', '未获奖'].includes(award))
 }
 
+function awardRank(work) {
+  const award = String(work?.award || '').trim()
+  if (!hasAward(work)) return 99
+  return awardRanks[award] || 6
+}
+
 function coverFor(work, variant = 'card') {
   if (!work) return ''
   if (variant === 'detail') {
@@ -220,7 +234,7 @@ onMounted(async () => {
   try {
     const [statsRes, worksRes, newsRes] = await Promise.all([
       getStats(),
-      getWorks({ page: 1, page_size: 6 }),
+      getWorks({ page: 1, page_size: 6, sort: 'award_priority', awarded_only: true }),
       getNewsList({ page: 1, page_size: 3 }),
     ])
     stats.value = statsRes.data

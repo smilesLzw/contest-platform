@@ -2,7 +2,7 @@
 import math
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, asc
+from sqlalchemy import select, func, desc, asc, case
 from sqlalchemy.orm import joinedload
 
 from app.database import get_db
@@ -14,6 +14,21 @@ from app.schemas.common import ApiResponse, PageData
 from app.crud.log import create_log, model_snapshot
 
 router = APIRouter(prefix="/works", tags=["作品"])
+
+AWARD_NONE_VALUES = ("", "暂无", "无", "无奖", "未获奖")
+
+
+def _award_priority_expr():
+    award = func.trim(func.coalesce(Work.award, ""))
+    return case(
+        (award == "一等奖", 1),
+        (award == "二等奖", 2),
+        (award == "三等奖", 3),
+        (award == "优秀奖", 4),
+        (award == "参与奖", 5),
+        (award.in_(AWARD_NONE_VALUES), 99),
+        else_=6,
+    )
 
 
 def _work_to_response(work: Work) -> WorkResponse:
@@ -63,6 +78,7 @@ async def list_works(
     work_type: str | None = None,
     keyword: str | None = None,
     sort: str = "created_at_desc",
+    awarded_only: bool = False,
     status: str | None = None,
     db: AsyncSession = Depends(get_db),
     current_user: User | None = Depends(get_optional_user),
@@ -89,10 +105,15 @@ async def list_works(
         query = query.where(
             Work.title.contains(keyword) | Work.author_names.contains(keyword)
         )
+    if awarded_only:
+        award = func.trim(func.coalesce(Work.award, ""))
+        query = query.where(~award.in_(AWARD_NONE_VALUES))
 
     # 排序
     if sort == "title_asc":
         query = query.order_by(asc(Work.title))
+    elif sort == "award_priority":
+        query = query.order_by(_award_priority_expr(), desc(Work.published_at), desc(Work.created_at))
     else:
         query = query.order_by(desc(Work.created_at))
 
