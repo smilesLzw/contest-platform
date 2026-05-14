@@ -8,15 +8,18 @@
       </div>
 
       <nav class="sidebar-nav">
-        <router-link
-          v-for="item in navItems"
-          :key="item.path"
-          :to="item.path"
-          :class="['nav-item', { active: isActive(item.path) }]"
-        >
-          <el-icon :size="16"><component :is="item.icon" /></el-icon>
-          <span>{{ item.label }}</span>
-        </router-link>
+        <section v-for="group in navGroups" :key="group.label" class="nav-group">
+          <div class="nav-group-title">{{ group.label }}</div>
+          <router-link
+            v-for="item in group.items"
+            :key="item.path"
+            :to="item.path"
+            :class="['nav-item', { active: isActive(item.path) }]"
+          >
+            <el-icon :size="16"><component :is="item.icon" /></el-icon>
+            <span>{{ item.label }}</span>
+          </router-link>
+        </section>
       </nav>
 
       <div class="sidebar-footer">
@@ -50,20 +53,53 @@ const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const allNavItems = [
-  { path: '/admin', label: '仪表盘', icon: DataAnalysis },
-  { path: '/admin/works', label: '作品管理', icon: Collection },
-  { path: '/admin/news', label: '新闻管理', icon: Reading },
-  { path: '/admin/ai-tools', label: 'AI 工具管理', icon: Tools },
-  { path: '/admin/users', label: '用户管理', icon: User, adminOnly: true },
-  { path: '/admin/profile', label: '个人资料', icon: UserFilled },
-  { path: '/admin/bg-music', label: '背景音乐', icon: Headset },
-  { path: '/admin/logs', label: '操作日志', icon: Document },
-  { path: '/admin/majors', label: '专业管理', icon: School },
-  { path: '/admin/competitions', label: '赛事管理', icon: Trophy, adminOnly: true },
+const navSections = [
+  {
+    label: '工作台',
+    items: [
+      { path: '/admin', label: '仪表盘', icon: DataAnalysis },
+    ],
+  },
+  {
+    label: '内容管理',
+    items: [
+      { path: '/admin/works', label: '作品管理', icon: Collection },
+      { path: '/admin/news', label: '新闻管理', icon: Reading },
+      { path: '/admin/bg-music', label: '背景音乐', icon: Headset },
+    ],
+  },
+  {
+    label: '平台配置',
+    items: [
+      { path: '/admin/ai-tools', label: 'AI 工具管理', icon: Tools },
+      { path: '/admin/majors', label: '专业管理', icon: School },
+      { path: '/admin/competitions', label: '赛事管理', icon: Trophy, adminOnly: true },
+    ],
+  },
+  {
+    label: '系统管理',
+    items: [
+      { path: '/admin/logs', label: '操作日志', icon: Document },
+      { path: '/admin/users', label: '用户管理', icon: User, adminOnly: true },
+    ],
+  },
+  {
+    label: '个人中心',
+    items: [
+      { path: '/admin/profile', label: '个人资料', icon: UserFilled },
+    ],
+  },
 ]
 
-const navItems = computed(() => allNavItems.filter(item => !item.adminOnly || authStore.isAdmin))
+const navGroups = computed(() => navSections
+  .map(section => ({
+    ...section,
+    items: section.items.filter(item => !item.adminOnly || authStore.isAdmin),
+  }))
+  .filter(section => section.items.length > 0)
+)
+
+const navItems = computed(() => navGroups.value.flatMap(group => group.items))
 
 function isActive(path) {
   if (path === '/admin') return route.path === '/admin'
@@ -82,7 +118,12 @@ const routeTitles = {
   '/admin/majors': '专业管理',
   '/admin/competitions': '赛事管理',
 }
-const currentTitle = computed(() => routeTitles[route.path] || '管理后台')
+const currentTitle = computed(() => {
+  const matchedPath = Object.keys(routeTitles)
+    .filter(path => path === '/admin' ? route.path === path : route.path.startsWith(path))
+    .sort((a, b) => b.length - a.length)[0]
+  return routeTitles[matchedPath] || '管理后台'
+})
 
 function handleBack() {
   router.push('/')
@@ -131,10 +172,24 @@ function handleBack() {
 /* Nav */
 .sidebar-nav {
   flex: 1;
-  padding: 12px 10px;
+  padding: 12px 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 14px;
+  overflow-y: auto;
+}
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.nav-group-title {
+  padding: 0 12px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+  letter-spacing: 0;
 }
 .nav-item {
   display: flex;
